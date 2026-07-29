@@ -32,7 +32,7 @@ export const CampaignExplorer: React.FC<CampaignExplorerProps> = ({
           <button 
             onClick={onSeedSampleData}
             disabled={loading}
-            className="flex items-center gap-2 bg-gradient-to-r from-nimiq-gold to-[#b8831b] hover:shadow-glow text-nimiq-dark px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50 pulse-glow"
+            className="flex items-center gap-2 bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50 pulse-glow"
           >
             <Sparkles size={14} />
             Seed Demo Events

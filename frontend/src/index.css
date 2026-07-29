@@ -7,16 +7,16 @@
 
 :root {
   /* Colors */
-  --color-bg-base: #080a10;
-  --color-bg-surface: rgba(16, 20, 32, 0.65);
-  --color-bg-surface-solid: #101420;
+  --color-bg-base: #0d131a;
+  --color-bg-surface: rgba(22, 32, 44, 0.65);
+  --color-bg-surface-solid: #16202c;
   --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-glow: rgba(224, 168, 46, 0.35);
+  --color-border-glow: rgba(39, 103, 226, 0.35);
   
-  --color-nimiq-gold: #e0a82e;
-  --color-nimiq-gold-rgb: 224, 168, 46;
-  --color-nimiq-blue: #1f2538;
-  --color-orange-accent: #e65100;
+  --color-nimiq-gold: #2767e2;
+  --color-nimiq-gold-rgb: 39, 103, 226;
+  --color-nimiq-blue: #131c26;
+  --color-orange-accent: #225fd5;
   --color-cyber-blue: #00b0ff;
   
   --color-text-primary: #f8fafc;
@@ -145,14 +145,14 @@ p {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-nimiq-gold) 0%, #b8831b 100%);
-  color: #080a10;
-  box-shadow: 0 4px 14px 0 rgba(224, 168, 46, 0.3);
+  background: linear-gradient(135deg, var(--color-nimiq-gold) 0%, #163da1 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px 0 rgba(39, 103, 226, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(224, 168, 46, 0.5), 0 0 0 2px rgba(224, 168, 46, 0.2);
+  box-shadow: 0 6px 20px 0 rgba(39, 103, 226, 0.5), 0 0 0 2px rgba(39, 103, 226, 0.2);
 }
 
 .btn-primary:active {

@@ -233,7 +233,7 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
                         <button 
                           onClick={handleClaimSubmit}
                           disabled={loading}
-                          className="bg-gradient-to-r from-nimiq-gold to-[#b8831b] hover:shadow-glow text-nimiq-dark px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
+                          className="bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
                         >
                           Claim
                         </button>
@@ -297,7 +297,7 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
                     <button 
                       onClick={handleClaimSubmit}
                       disabled={loading}
-                      className="w-full bg-gradient-to-r from-nimiq-gold to-[#b8831b] hover:shadow-glow text-nimiq-dark py-2.5 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
+                      className="w-full bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white py-2.5 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
                     >
                       Submit Answers
                     </button>
@@ -318,7 +318,7 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
                       <button 
                         onClick={handleClaimSubmit}
                         disabled={loading}
-                        className="bg-gradient-to-r from-nimiq-gold to-[#b8831b] hover:shadow-glow text-nimiq-dark px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
+                        className="bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
                       >
                         Claim
                       </button>
@@ -336,7 +336,7 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
                   setVerificationInput('');
                   setQuizAnswers({});
                 }}
-                className="bg-gradient-to-r from-nimiq-gold to-[#b8831b] hover:shadow-glow text-nimiq-dark px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95"
+                className="bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95"
               >
                 Complete Challenge to Claim
               </button>

@@ -320,7 +320,7 @@ export const CampaignCreator: React.FC<CampaignCreatorProps> = ({
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-gradient-to-r from-nimiq-gold to-[#b8831b] hover:shadow-glow text-nimiq-dark py-3 rounded-xl text-sm font-extrabold transition-all duration-200 active:scale-95 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white py-3 rounded-xl text-sm font-extrabold transition-all duration-200 active:scale-95 disabled:opacity-50"
           >
             Fund Escrow & Launch Campaign
           </button>

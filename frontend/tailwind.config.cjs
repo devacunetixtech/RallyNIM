@@ -5,18 +5,18 @@ module.exports = {
     extend: {
       colors: {
         nimiq: {
-          gold: '#E0A82E',
-          yellow: '#FFC107',
-          blue: '#1F2538',
-          dark: '#101420',
+          gold: '#2767e2',          // New Brand Blue
+          yellow: '#225fd5',        // Accent Blue
+          blue: '#131c26',          // Dark Slate Blue
+          dark: '#0d131a',          // Deep Base
           light: '#F8F9FA'
         },
         brand: {
-          primary: '#E0A82E',       // Nimiq Gold
-          secondary: '#E65100',     // Deep Orange accent
-          background: '#0B0D17',    // Deep slate black
-          surface: '#151926',       // Semi-translucent surface
-          accent: '#00B0FF'         // Cyber blue highlight
+          primary: '#2767e2',       // New Brand Blue
+          secondary: '#225fd5',     // Accent Blue
+          background: '#0d131a',    // Deep Base
+          surface: '#16202c',       // Surface
+          accent: '#00b0ff'         // Cyber blue highlight
         }
       },
       fontFamily: {
@@ -25,7 +25,7 @@ module.exports = {
       },
       boxShadow: {
         glass: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-        glow: '0 0 15px rgba(224, 168, 46, 0.4)'
+        glow: '0 0 15px rgba(39, 103, 226, 0.4)'
       },
       backdropBlur: {
         glass: '16px'

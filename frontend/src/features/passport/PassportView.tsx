@@ -15,8 +15,8 @@ export const PassportView: React.FC<PassportViewProps> = ({
       
       {/* Passport Profile Header */}
       <div className="flex items-center gap-4 border-b border-white/5 pb-5 mb-6 flex-wrap">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-nimiq-gold to-[#b8831b] flex items-center justify-center shrink-0">
-          <User size={32} className="text-nimiq-dark" />
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-nimiq-gold to-[#163da1] flex items-center justify-center shrink-0">
+          <User size={32} className="text-white" />
         </div>
         <div>
           <h3 className="text-lg font-bold text-slate-100">Event Attendance Passport</h3>

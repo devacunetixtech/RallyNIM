@@ -428,7 +428,7 @@ export default function App() {
           <button 
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
               activeTab === 'explore' 
-                ? 'bg-gradient-to-r from-nimiq-gold to-[#b8831b] text-nimiq-dark shadow-glow' 
+                ? 'bg-gradient-to-r from-nimiq-gold to-[#163da1] text-white shadow-glow' 
                 : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10'
             }`}
             onClick={() => { setActiveTab('explore'); setSelectedCampaign(null); }}
@@ -442,7 +442,7 @@ export default function App() {
               <button 
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
                   activeTab === 'passport' 
-                    ? 'bg-gradient-to-r from-nimiq-gold to-[#b8831b] text-nimiq-dark shadow-glow' 
+                    ? 'bg-gradient-to-r from-nimiq-gold to-[#163da1] text-white shadow-glow' 
                     : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10'
                 }`}
                 onClick={() => setActiveTab('passport')}
@@ -456,7 +456,7 @@ export default function App() {
                   <button 
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
                       activeTab === 'create' 
-                        ? 'bg-gradient-to-r from-nimiq-gold to-[#b8831b] text-nimiq-dark shadow-glow' 
+                        ? 'bg-gradient-to-r from-nimiq-gold to-[#163da1] text-white shadow-glow' 
                         : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10'
                     }`}
                     onClick={() => setActiveTab('create')}
@@ -467,7 +467,7 @@ export default function App() {
                   <button 
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
                       activeTab === 'analytics' 
-                        ? 'bg-gradient-to-r from-nimiq-gold to-[#b8831b] text-nimiq-dark shadow-glow' 
+                        ? 'bg-gradient-to-r from-nimiq-gold to-[#163da1] text-white shadow-glow' 
                         : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10'
                     }`}
                     onClick={() => setActiveTab('analytics')}

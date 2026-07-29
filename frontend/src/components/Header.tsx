@@ -25,18 +25,17 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="flex flex-col sm:flex-row justify-between items-center mb-6 py-4 border-b border-white/5 gap-4">
       {/* Brand Logo and Title */}
-      <div className="flex items-center gap-3">
-        <div className="bg-gradient-to-br from-nimiq-gold to-[#b8831b] w-10 h-10 rounded-xl flex items-center justify-center shadow-glow">
-          <Sparkles size={22} className="text-nimiq-dark" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-extrabold flex items-center gap-2 tracking-tight">
-            Rally<span className="text-nimiq-gold">NIM</span>
-            <span className="bg-nimiq-gold/15 border border-nimiq-gold/30 text-nimiq-gold px-2.5 py-0.5 rounded-full text-[10px] font-bold">
-              TESTNET
-            </span>
-          </h1>
-          <p className="text-xs text-slate-400">Event Engagement & Escrow Rewards</p>
+      <div className="flex items-center gap-4">
+        <img 
+          src="/Assets/RallyPrimaryLogo.png" 
+          alt="RallyNIM" 
+          className="h-11 w-auto object-contain" 
+        />
+        <div className="flex flex-col">
+          <span className="w-fit bg-nimiq-gold/15 border border-nimiq-gold/30 text-nimiq-gold px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase">
+            TESTNET
+          </span>
+          <p className="text-[10px] text-slate-400 mt-1">Event Engagement & Escrow Rewards</p>
         </div>
       </div>
 
@@ -75,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button 
               onClick={onConnect} 
               disabled={walletLoading}
-              className="flex items-center gap-2 bg-gradient-to-r from-nimiq-gold to-[#b8831b] hover:shadow-glow text-nimiq-dark px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
             >
               {walletLoading ? (
                 <RefreshCw size={14} className="animate-spin" />
