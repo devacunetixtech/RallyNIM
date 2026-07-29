@@ -4,11 +4,13 @@ export interface INimiqWalletService {
   signMessage(message: string): Promise<string>;
   sendTransaction(recipient: string, amountInNIM: number, data?: string): Promise<string>;
   getBalance(): Promise<number>;
+  isMock(): boolean;
 }
 
 class NimiqWalletService implements INimiqWalletService {
   private activeAddress: string | null = null;
   private mockBalance: number = 250; // Initial mock NIM balance
+  private isMockConnection: boolean = true;
 
   constructor() {
     // Attempt to restore session address if stored locally
@@ -16,8 +18,13 @@ class NimiqWalletService implements INimiqWalletService {
       const savedAddress = localStorage.getItem('nimiq_wallet_address');
       if (savedAddress) {
         this.activeAddress = savedAddress;
+        this.isMockConnection = localStorage.getItem('nimiq_wallet_is_mock') === 'true';
       }
     }
+  }
+
+  isMock(): boolean {
+    return this.isMockConnection;
   }
 
   async connect(): Promise<string> {
@@ -28,7 +35,9 @@ class NimiqWalletService implements INimiqWalletService {
         const sdk = win.MiniAppSDK.getInstance();
         const account = await sdk.requestAddress();
         this.activeAddress = account.address;
+        this.isMockConnection = false;
         localStorage.setItem('nimiq_wallet_address', account.address);
+        localStorage.setItem('nimiq_wallet_is_mock', 'false');
         return account.address;
       } catch (error) {
         console.error('Nimiq SDK request address failed, falling back to mock:', error);
@@ -44,7 +53,9 @@ class NimiqWalletService implements INimiqWalletService {
       ).join(' ');
       mockAddress = `NQ${randomHex}`;
       this.activeAddress = mockAddress;
+      this.isMockConnection = true;
       localStorage.setItem('nimiq_wallet_address', mockAddress);
+      localStorage.setItem('nimiq_wallet_is_mock', 'true');
     }
     
     return mockAddress;

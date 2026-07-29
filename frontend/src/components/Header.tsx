@@ -10,6 +10,7 @@ interface HeaderProps {
   setSelectedRole: (role: 'participant' | 'organizer') => void;
   onConnect: () => void;
   onDisconnect: () => void;
+  isMock: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   setSelectedRole,
   onConnect,
   onDisconnect,
+  isMock,
 }) => {
   return (
     <header className="flex flex-col sm:flex-row justify-between items-center mb-6 py-4 border-b border-white/5 gap-4">
@@ -44,8 +46,11 @@ export const Header: React.FC<HeaderProps> = ({
         {isAuthenticated && user ? (
           <div className="flex flex-wrap items-center gap-3 bg-white/[0.02] p-2 pr-3 pl-3 rounded-xl border border-white/5 shadow-inner">
             <div className="text-right">
-              <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+              <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center justify-end gap-1.5">
                 {user.role} wallet
+                <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider ${isMock ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                  {isMock ? 'Mock' : 'Live'}
+                </span>
               </div>
               <div className="text-sm font-bold text-nimiq-gold">
                 {walletBalance.toFixed(2)} NIM
