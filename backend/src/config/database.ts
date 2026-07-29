@@ -31,7 +31,7 @@ export const connectDatabase = async (): Promise<void> => {
       }
     }
 
-    await mongoose.connect(config.mongoUri);
+    await mongoose.connect(config.mongoUri, { family: 4 });
   } catch (error) {
     logger.error(`Failed to connect to MongoDB: ${error}`);
     process.exit(1);
