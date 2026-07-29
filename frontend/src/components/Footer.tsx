@@ -6,7 +6,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({
-  escrowAddress = 'NQ34 G6XF HT9Y SMQ2 YS1X U29D E91X 557U F31P'
+  escrowAddress = 'NQ51 3QKM SJGD DU04 S4E6 3RU1 TF1Q D3M5 N610'
 }) => {
   return (
     <footer className="mt-12 pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-xs">
