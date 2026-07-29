@@ -3,8 +3,20 @@ import { config } from './environment';
 import { logger } from '../utils/logger';
 
 export let mongoServer: any = null;
+let cachedConnectionPromise: Promise<typeof mongoose> | null = null;
 
 export const connectDatabase = async (): Promise<void> => {
+  // If already connected, do nothing
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
+
+  // If connection is in progress, await it
+  if (cachedConnectionPromise) {
+    await cachedConnectionPromise;
+    return;
+  }
+
   try {
     mongoose.connection.on('connected', () => {
       logger.info('MongoDB connected successfully');
@@ -16,6 +28,7 @@ export const connectDatabase = async (): Promise<void> => {
 
     mongoose.connection.on('disconnected', () => {
       logger.warn('MongoDB disconnected');
+      cachedConnectionPromise = null;
     });
 
     if (config.nodeEnv === 'development' && config.mongoUri.includes('localhost')) {
@@ -24,16 +37,25 @@ export const connectDatabase = async (): Promise<void> => {
         mongoServer = await MongoMemoryServer.create();
         const uri = mongoServer.getUri();
         logger.info(`Starting in-memory MongoDB server: ${uri}`);
-        await mongoose.connect(uri);
+        cachedConnectionPromise = mongoose.connect(uri);
+        await cachedConnectionPromise;
         return;
       } catch (err) {
         logger.error(`Failed to start in-memory MongoDB server: ${err}. Falling back to standard URI.`);
       }
     }
 
-    await mongoose.connect(config.mongoUri, { family: 4 });
+    logger.info('Establishing new MongoDB connection...');
+    cachedConnectionPromise = mongoose.connect(config.mongoUri, { 
+      family: 4,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    
+    await cachedConnectionPromise;
   } catch (error) {
     logger.error(`Failed to connect to MongoDB: ${error}`);
-    process.exit(1);
+    cachedConnectionPromise = null;
+    throw error;
   }
 };

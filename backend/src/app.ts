@@ -10,8 +10,19 @@ import claimRoutes from './routes/claim.routes';
 import passportRoutes from './routes/passport.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 import { authRateLimiter } from './middleware/rateLimiter.middleware';
+import { connectDatabase } from './config/database';
 
 const app = express();
+
+// Database connection middleware for Serverless compatibility
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await connectDatabase();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Security Middlewares
 app.use(helmet());
