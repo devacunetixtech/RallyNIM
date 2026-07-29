@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 
 interface NotificationBannerProps {
@@ -14,6 +14,15 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({
   onClearError,
   onClearSuccess,
 }) => {
+  // Auto-dismiss success banner after 3 seconds
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = setTimeout(() => {
+      onClearSuccess?.();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [successMessage]);
+
   return (
     <>
       {errorMessage && (
