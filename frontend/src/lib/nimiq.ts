@@ -15,7 +15,8 @@ let activeAddress: string | null = null;
 
 // Restore address from local storage across page refreshes
 if (typeof window !== 'undefined') {
-  activeAddress = localStorage.getItem('nimiq_wallet_address');
+  const stored = localStorage.getItem('nimiq_wallet_address');
+  activeAddress = stored ? stored.replace(/\s+/g, '').toLowerCase() : null;
 }
 
 /**
@@ -76,9 +77,10 @@ export async function connectWallet(): Promise<string> {
       throw new Error('No accounts found in Nimiq Pay wallet.');
     }
 
-    activeAddress = address;
-    localStorage.setItem('nimiq_wallet_address', address);
-    return address;
+    const normalized = address.replace(/\s+/g, '').toLowerCase();
+    activeAddress = normalized;
+    localStorage.setItem('nimiq_wallet_address', normalized);
+    return normalized;
   } else {
     // 2. Standard Web Browser / Desktop Flow
     return connectViaHub();
@@ -97,9 +99,10 @@ async function connectViaHub(): Promise<string> {
     throw new Error('No address selected from Nimiq Hub.');
   }
 
-  activeAddress = result.address;
-  localStorage.setItem('nimiq_wallet_address', result.address);
-  return result.address;
+  const normalized = result.address.replace(/\s+/g, '').toLowerCase();
+  activeAddress = normalized;
+  localStorage.setItem('nimiq_wallet_address', normalized);
+  return normalized;
 }
 
 /**

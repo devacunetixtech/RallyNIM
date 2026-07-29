@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Compass, User, PlusCircle, BarChart2 } from 'lucide-react';
+import { Compass, User, PlusCircle, BarChart2, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 import { useAuthStore } from './store/useAuthStore';
-import { connectWallet, signMessage as nimiqSignMessage, getBalance as nimiqGetBalance, disconnectWallet, getActiveAddress, sendTransaction as nimiqSendTransaction } from './lib/nimiq';
+import { connectWallet, signMessage as nimiqSignMessage, getBalance as nimiqGetBalance, disconnectWallet, getActiveAddress, sendTransaction as nimiqSendTransaction, isInsideNimiqPay } from './lib/nimiq';
 import { api } from './lib/api';
 
 // Components
@@ -24,6 +24,7 @@ export default function App() {
   const { user, isAuthenticated, setAuth, clearAuth } = useAuthStore();
   const [walletLoading, setWalletLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'participant' | 'organizer'>('participant');
+  const [pendingAuth, setPendingAuth] = useState<{ address: string; nonce: string } | null>(null);
   
   // Navigation
   const [activeTab, setActiveTab] = useState<'explore' | 'passport' | 'create' | 'analytics'>('explore');
@@ -243,11 +244,47 @@ export default function App() {
       // 2. Get a nonce from our backend
       const { nonce } = await api.auth.connect(address);
 
-      // 3. Sign the nonce message — returns { publicKey, signature }
+      if (isInsideNimiqPay()) {
+        // Nimiq Pay uses native bridge - no popup blocker issue.
+        const signatureMessage = `Sign this message to authenticate with RallyNIM. Nonce: ${nonce}`;
+        const { publicKey, signature } = await nimiqSignMessage(signatureMessage);
+
+        const response = await api.auth.verify(address, signature, publicKey, selectedRole);
+
+        setAuth(response.token, {
+          ...response.user,
+          role: selectedRole
+        });
+
+        setSuccessMessage('Wallet connected successfully!');
+        updateBalance();
+
+        confetti({
+          particleCount: 80,
+          spread: 60,
+          origin: { y: 0.8 }
+        });
+      } else {
+        // Standard Web Browser: Open a signature verification modal
+        // to ensure the user clicks 'Sign' directly, keeping user gesture active.
+        setPendingAuth({ address, nonce });
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to connect wallet');
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  const handleCompleteAuth = async () => {
+    if (!pendingAuth) return;
+    setWalletLoading(true);
+    setErrorMessage(null);
+    try {
+      const { address, nonce } = pendingAuth;
       const signatureMessage = `Sign this message to authenticate with RallyNIM. Nonce: ${nonce}`;
       const { publicKey, signature } = await nimiqSignMessage(signatureMessage);
 
-      // 4. Verify with backend using the real public key and selected role
       const response = await api.auth.verify(address, signature, publicKey, selectedRole);
 
       setAuth(response.token, {
@@ -257,6 +294,7 @@ export default function App() {
 
       setSuccessMessage('Wallet connected successfully!');
       updateBalance();
+      setPendingAuth(null);
 
       confetti({
         particleCount: 80,
@@ -264,7 +302,7 @@ export default function App() {
         origin: { y: 0.8 }
       });
     } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to connect wallet');
+      setErrorMessage(err.message || 'Failed to verify signature');
     } finally {
       setWalletLoading(false);
     }
@@ -557,6 +595,55 @@ export default function App() {
 
       {/* FOOTER */}
       <Footer />
+
+      {/* SIGNATURE VERIFICATION MODAL */}
+      <AnimatePresence>
+        {pendingAuth && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-[#0f142c]/90 border border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl backdrop-blur-md"
+            >
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="p-3 bg-nimiq-gold/10 border border-nimiq-gold/20 rounded-full text-nimiq-gold animate-pulse">
+                  <span className="w-3 h-3 rounded-full bg-nimiq-gold inline-block" />
+                </div>
+                <h3 className="text-lg font-bold text-white tracking-wide">
+                  Verify Wallet Ownership
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  You connected address <span className="font-mono text-slate-200 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">{pendingAuth.address.slice(0, 6)}···{pendingAuth.address.slice(-4)}</span>.
+                  Please sign a secure cryptographic challenge message to authenticate.
+                </p>
+                <div className="w-full flex flex-col gap-2 mt-2">
+                  <button
+                    onClick={handleCompleteAuth}
+                    disabled={walletLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white py-2.5 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
+                  >
+                    {walletLoading ? (
+                      <RefreshCw size={14} className="animate-spin" />
+                    ) : (
+                      'Sign Message & Verify'
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPendingAuth(null);
+                      setWalletLoading(false);
+                    }}
+                    className="w-full bg-white/5 hover:bg-white/10 text-slate-300 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

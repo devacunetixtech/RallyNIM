@@ -11,10 +11,17 @@ const nonceStore = new Map<string, { nonce: string; expiresAt: number }>();
 
 export class AuthService {
   /**
+   * Normalizes a Nimiq wallet address by stripping all spacing and lowercasing.
+   */
+  private normalizeAddress(address: string): string {
+    return address.replace(/\s+/g, '').toLowerCase();
+  }
+
+  /**
    * Generates a unique nonce for a wallet address and stores it for 5 minutes.
    */
   public generateNonce(walletAddress: string): string {
-    const cleanAddress = walletAddress.toLowerCase().trim();
+    const cleanAddress = this.normalizeAddress(walletAddress);
     const nonce = crypto.randomUUID();
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes expiry
 
@@ -31,7 +38,7 @@ export class AuthService {
     publicKey: string,
     role?: string
   ): Promise<{ token: string; refreshToken: string; user: IUser }> {
-    const cleanAddress = walletAddress.toLowerCase().trim();
+    const cleanAddress = this.normalizeAddress(walletAddress);
     const cachedData = nonceStore.get(cleanAddress);
 
     if (!cachedData) {
@@ -62,32 +69,70 @@ export class AuthService {
     nonceStore.delete(cleanAddress);
 
     // Fetch or create user
-    let user = await User.findOne({ walletAddress: cleanAddress });
+    const searchAddressRegex = new RegExp('^' + cleanAddress.split('').join('\\s*') + '$', 'i');
+    let user = await User.findOne({
+      $or: [
+        { walletAddress: cleanAddress },
+        { walletAddress: { $regex: searchAddressRegex } }
+      ]
+    });
 
     if (!user) {
-      // First-time user: Create empty Passport
-      const newPassport = new Passport({
-        walletAddress: cleanAddress,
-        eventsAttended: [],
-        campaignsCompleted: [],
-        totalNIMEarned: 0,
-        badges: [],
-        achievements: [],
-        streak: 0,
+      // First-time user: Create/find empty Passport
+      let passport = await Passport.findOne({
+        $or: [
+          { walletAddress: cleanAddress },
+          { walletAddress: { $regex: searchAddressRegex } }
+        ]
       });
-      await newPassport.save();
+
+      if (!passport) {
+        passport = new Passport({
+          walletAddress: cleanAddress,
+          eventsAttended: [],
+          campaignsCompleted: [],
+          totalNIMEarned: 0,
+          badges: [],
+          achievements: [],
+          streak: 0,
+        });
+        await passport.save();
+      } else if (passport.walletAddress !== cleanAddress) {
+        // Upgrade legacy spacing format in db
+        passport.walletAddress = cleanAddress;
+        await passport.save();
+      }
 
       // Create User
       user = new User({
         walletAddress: cleanAddress,
         role: (role as any) || 'participant',
-        passportId: newPassport._id,
+        passportId: passport._id,
       });
       await user.save();
-    } else if (role && user.role !== role) {
-      // Update role if changed
-      user.role = role as any;
-      await user.save();
+    } else {
+      // User found, perform self-healing cleanup if wallet address is not normalized
+      let dbUpdated = false;
+      if (user.walletAddress !== cleanAddress) {
+        user.walletAddress = cleanAddress;
+        dbUpdated = true;
+      }
+      if (role && user.role !== role) {
+        user.role = role as any;
+        dbUpdated = true;
+      }
+      if (dbUpdated) {
+        await user.save();
+      }
+
+      // Also clean up passport if needed
+      if (user.passportId) {
+        const passport = await Passport.findById(user.passportId);
+        if (passport && passport.walletAddress !== cleanAddress) {
+          passport.walletAddress = cleanAddress;
+          await passport.save();
+        }
+      }
     }
 
     // Generate session JWT tokens
