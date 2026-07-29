@@ -410,7 +410,6 @@ export default function App() {
         setSelectedRole={setSelectedRole}
         onConnect={handleConnectWallet}
         onDisconnect={handleDisconnect}
-        isMock={nimiqWallet.isMock()}
       />
 
       {/* FEEDBACK BANNERS */}
