@@ -1,19 +1,17 @@
 import React from 'react';
-import { Compass, Sparkles, RefreshCw, Info } from 'lucide-react';
+import { Compass, RefreshCw, Info } from 'lucide-react';
 import { CampaignCard } from './CampaignCard';
 
 interface CampaignExplorerProps {
   campaigns: any[];
   loading: boolean;
   onSelectCampaign: (id: string) => void;
-  onSeedSampleData: () => void;
 }
 
 export const CampaignExplorer: React.FC<CampaignExplorerProps> = ({
   campaigns,
   loading,
   onSelectCampaign,
-  onSeedSampleData,
 }) => {
   return (
     <div>
@@ -27,17 +25,6 @@ export const CampaignExplorer: React.FC<CampaignExplorerProps> = ({
             Attend real-world events, check in to stages, and receive instant Nimiq transfers.
           </p>
         </div>
-
-        {campaigns.length === 0 && (
-          <button 
-            onClick={onSeedSampleData}
-            disabled={loading}
-            className="flex items-center gap-2 bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50 pulse-glow"
-          >
-            <Sparkles size={14} />
-            Seed Demo Events
-          </button>
-        )}
       </div>
 
       {loading ? (
@@ -48,8 +35,8 @@ export const CampaignExplorer: React.FC<CampaignExplorerProps> = ({
         <div className="glass-panel text-center py-12 px-6 flex flex-col items-center">
           <Info size={40} className="text-slate-500 mb-4" />
           <h3 className="text-lg font-semibold text-slate-200 mb-2">No campaigns found</h3>
-          <p className="text-sm text-slate-400 max-w-md mb-6">
-            Click "Seed Demo Events" above to instantly load mock hackathons and summits.
+          <p className="text-sm text-slate-400 max-w-md">
+            There are currently no active campaigns. Please check back later.
           </p>
         </div>
       ) : (

@@ -27,7 +27,7 @@ export class AuthController {
    */
   public verify = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { walletAddress, signature, publicKey } = req.body;
+      const { walletAddress, signature, publicKey, role } = req.body;
       if (!walletAddress || !signature || !publicKey) {
         res.status(400).json({ error: 'walletAddress, signature, and publicKey are required' });
         return;
@@ -36,7 +36,8 @@ export class AuthController {
       const { token, refreshToken, user } = await authService.verifySignature(
         walletAddress,
         signature,
-        publicKey
+        publicKey,
+        role
       );
 
       // Set refresh token in HTTPOnly secure cookie

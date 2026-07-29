@@ -39,6 +39,11 @@ export const connectDatabase = async (): Promise<void> => {
         logger.info(`Starting in-memory MongoDB server: ${uri}`);
         cachedConnectionPromise = mongoose.connect(uri);
         await cachedConnectionPromise;
+        
+        import('./seed')
+          .then(m => m.seedDatabase())
+          .catch(err => logger.error(`In-memory database seeding failed: ${err}`));
+          
         return;
       } catch (err) {
         logger.error(`Failed to start in-memory MongoDB server: ${err}. Falling back to standard URI.`);
@@ -53,6 +58,11 @@ export const connectDatabase = async (): Promise<void> => {
     });
     
     await cachedConnectionPromise;
+    
+    // Asynchronously run seeding so it doesn't block server start or request handling
+    import('./seed')
+      .then(m => m.seedDatabase())
+      .catch(err => logger.error(`Database seeding execution failed: ${err}`));
   } catch (error) {
     logger.error(`Failed to connect to MongoDB: ${error}`);
     cachedConnectionPromise = null;

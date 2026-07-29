@@ -28,7 +28,8 @@ export class AuthService {
   public async verifySignature(
     walletAddress: string,
     signature: string,
-    publicKey: string
+    publicKey: string,
+    role?: string
   ): Promise<{ token: string; refreshToken: string; user: IUser }> {
     const cleanAddress = walletAddress.toLowerCase().trim();
     const cachedData = nonceStore.get(cleanAddress);
@@ -79,12 +80,14 @@ export class AuthService {
       // Create User
       user = new User({
         walletAddress: cleanAddress,
-        role: 'participant',
+        role: (role as any) || 'participant',
         passportId: newPassport._id,
       });
       await user.save();
-
-      // Update Passport with userId if needed, or link it
+    } else if (role && user.role !== role) {
+      // Update role if changed
+      user.role = role as any;
+      await user.save();
     }
 
     // Generate session JWT tokens

@@ -247,8 +247,8 @@ export default function App() {
       const signatureMessage = `Sign this message to authenticate with RallyNIM. Nonce: ${nonce}`;
       const { publicKey, signature } = await nimiqSignMessage(signatureMessage);
 
-      // 4. Verify with backend using the real public key
-      const response = await api.auth.verify(address, signature, publicKey);
+      // 4. Verify with backend using the real public key and selected role
+      const response = await api.auth.verify(address, signature, publicKey, selectedRole);
 
       setAuth(response.token, {
         ...response.user,
@@ -500,7 +500,6 @@ export default function App() {
                 campaigns={campaigns}
                 loading={loading}
                 onSelectCampaign={handleSelectCampaign}
-                onSeedSampleData={seedSampleData}
               />
             )}
 

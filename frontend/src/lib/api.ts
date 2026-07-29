@@ -33,10 +33,10 @@ export const api = {
         body: JSON.stringify({ walletAddress })
       }),
       
-    verify: (walletAddress: string, signature: string, publicKey: string) =>
+    verify: (walletAddress: string, signature: string, publicKey: string, role?: string) =>
       request<{ token: string; user: any }>('/auth/verify', {
         method: 'POST',
-        body: JSON.stringify({ walletAddress, signature, publicKey })
+        body: JSON.stringify({ walletAddress, signature, publicKey, role })
       }),
       
     me: () => 
