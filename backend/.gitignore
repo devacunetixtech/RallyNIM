@@ -1,0 +1,10 @@
+.env
+node_modules
+dist
+yarn.lock
+yarn-error.log
+yarn-debug.log
+npm-debug.log
+.npmrc  
+#test_*
+/test_*
