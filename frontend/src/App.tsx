@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 import { useAuthStore } from './store/useAuthStore';
-import { nimiqWallet } from './lib/nimiq';
+import { connectWallet, signMessage as nimiqSignMessage, getBalance as nimiqGetBalance, disconnectWallet, getActiveAddress, sendTransaction as nimiqSendTransaction } from './lib/nimiq';
 import { api } from './lib/api';
 
 // Components
@@ -110,7 +110,7 @@ export default function App() {
 
   const updateBalance = async () => {
     try {
-      const balance = await nimiqWallet.getBalance();
+      const balance = await nimiqGetBalance();
       setWalletBalance(balance);
     } catch (err) {
       console.error(err);
@@ -237,22 +237,27 @@ export default function App() {
     setWalletLoading(true);
     setErrorMessage(null);
     try {
-      const address = await nimiqWallet.connect();
+      // 1. Request address from Nimiq Pay via official SDK
+      const address = await connectWallet();
+
+      // 2. Get a nonce from our backend
       const { nonce } = await api.auth.connect(address);
-      
+
+      // 3. Sign the nonce message — returns { publicKey, signature }
       const signatureMessage = `Sign this message to authenticate with RallyNIM. Nonce: ${nonce}`;
-      const signature = await nimiqWallet.signMessage(signatureMessage);
-      
-      const response = await api.auth.verify(address, signature, 'mock_public_key');
-      
+      const { publicKey, signature } = await nimiqSignMessage(signatureMessage);
+
+      // 4. Verify with backend using the real public key
+      const response = await api.auth.verify(address, signature, publicKey);
+
       setAuth(response.token, {
         ...response.user,
         role: selectedRole
       });
-      
+
       setSuccessMessage('Wallet connected successfully!');
       updateBalance();
-      
+
       confetti({
         particleCount: 80,
         spread: 60,
@@ -266,7 +271,7 @@ export default function App() {
   };
 
   const handleDisconnect = () => {
-    nimiqWallet.disconnect();
+    disconnectWallet();
     clearAuth();
     setMyPassport(null);
     setClaimHistory([]);
@@ -362,7 +367,7 @@ export default function App() {
       
       // Fund campaign using Nimiq escrow service
       const escrowAddress = 'NQ34 G6XF HT9Y SMQ2 YS1X U29D E91X 557U F31P';
-      const txHash = await nimiqWallet.sendTransaction(escrowAddress, newCampaign.rewardPool, res.campaign._id);
+      const txHash = await nimiqSendTransaction(escrowAddress, newCampaign.rewardPool, res.campaign._id);
       
       // Publish campaign to Live
       await api.campaigns.publish(res.campaign._id, txHash);

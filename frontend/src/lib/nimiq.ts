@@ -1,133 +1,149 @@
-export interface INimiqWalletService {
-  connect(): Promise<string>;
-  getAccount(): Promise<string | null>;
-  signMessage(message: string): Promise<string>;
-  sendTransaction(recipient: string, amountInNIM: number, data?: string): Promise<string>;
-  getBalance(): Promise<number>;
+import { init, type NimiqProvider } from '@nimiq/mini-app-sdk';
+
+/**
+ * NimiqWalletService
+ *
+ * Uses the official @nimiq/mini-app-sdk package.
+ * - `init()` resolves to a `NimiqProvider` when running inside Nimiq Pay.
+ * - `window.nimiq` is injected by the Nimiq Pay host before the page loads.
+ * - All methods throw clear errors if called outside Nimiq Pay.
+ */
+
+let provider: NimiqProvider | null = null;
+let activeAddress: string | null = null;
+
+// Restore address from local storage across page refreshes
+if (typeof window !== 'undefined') {
+  activeAddress = localStorage.getItem('nimiq_wallet_address');
 }
 
-class NimiqWalletService implements INimiqWalletService {
-  private activeAddress: string | null = null;
-
-  constructor() {
-    // Attempt to restore session address if stored locally
-    if (typeof window !== 'undefined') {
-      const savedAddress = localStorage.getItem('nimiq_wallet_address');
-      if (savedAddress) {
-        this.activeAddress = savedAddress;
-      }
-    }
-  }
-
-  async connect(): Promise<string> {
-    const win = window as any;
-    if (!win.MiniAppSDK) {
-      throw new Error('Nimiq Minipay SDK not found. Please open this app inside Nimiq Minipay.');
-    }
-
-    try {
-      const sdk = win.MiniAppSDK.getInstance();
-      const account = await sdk.requestAddress();
-      this.activeAddress = account.address;
-      localStorage.setItem('nimiq_wallet_address', account.address);
-      return account.address;
-    } catch (error: any) {
-      throw new Error(error?.message || 'Failed to request address from Nimiq SDK');
-    }
-  }
-
-  async getAccount(): Promise<string | null> {
-    return this.activeAddress;
-  }
-
-  async signMessage(message: string): Promise<string> {
-    const win = window as any;
-    if (!win.MiniAppSDK) {
-      throw new Error('Nimiq Minipay SDK not found.');
-    }
-    if (!this.activeAddress) {
-      throw new Error('No active wallet connected.');
-    }
-
-    try {
-      const sdk = win.MiniAppSDK.getInstance();
-      const signatureResult = await sdk.signMessage({
-        message,
-        address: this.activeAddress
-      });
-      return signatureResult.signature;
-    } catch (error: any) {
-      throw new Error(error?.message || 'Failed to sign message using Nimiq SDK');
-    }
-  }
-
-  async sendTransaction(recipient: string, amountInNIM: number, data?: string): Promise<string> {
-    const win = window as any;
-    if (!win.MiniAppSDK) {
-      throw new Error('Nimiq Minipay SDK not found.');
-    }
-    if (!this.activeAddress) {
-      throw new Error('No active wallet connected.');
-    }
-
-    try {
-      const sdk = win.MiniAppSDK.getInstance();
-      const lunaAmount = amountInNIM * 100000;
-      const txResult = await sdk.sendTransaction({
-        sender: this.activeAddress,
-        recipient,
-        value: lunaAmount,
-        fee: 0,
-        extraData: data ? new TextEncoder().encode(data) : undefined
-      });
-      return txResult.hash;
-    } catch (error: any) {
-      throw new Error(error?.message || 'Failed to send transaction via Nimiq SDK');
-    }
-  }
-
-  async getBalance(): Promise<number> {
-    if (!this.activeAddress) return 0;
-    
-    // Normalize address by removing spaces
-    const normalized = this.activeAddress.replace(/\s+/g, '');
-    
-    try {
-      const rpcUrl = 'https://rpc.testnet.nimiqwatch.com';
-      const response = await fetch(rpcUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'getAccountByAddress',
-          params: [normalized],
-          id: 1
-        })
-      });
-      
-      const data = await response.json();
-      if (data.result) {
-        if (data.result.data && typeof data.result.data.balance === 'number') {
-          return data.result.data.balance / 100000;
-        }
-        if (data.result.data === null) {
-          return 0;
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch real balance from Nimiq RPC:', error);
-    }
-
-    return 0;
-  }
-
-  // Helper method to disconnect
-  public disconnect() {
-    this.activeAddress = null;
-    localStorage.removeItem('nimiq_wallet_address');
-  }
+/**
+ * Returns true if we are running inside the Nimiq Pay / Minipay host.
+ * The host injects `window.nimiq` synchronously before any page script runs.
+ */
+export function isInsideNimiqPay(): boolean {
+  return typeof window !== 'undefined' && Boolean((window as any).nimiq);
 }
 
-export const nimiqWallet = new NimiqWalletService();
+/**
+ * Initialise the SDK provider and request the user's wallet address.
+ * Must be called from a user gesture (button click).
+ */
+export async function connectWallet(): Promise<string> {
+  // Init the provider — resolves when inside Nimiq Pay, rejects otherwise
+  try {
+    provider = await init({ timeout: 5000 });
+  } catch (err: any) {
+    throw new Error(
+      'Not running inside Nimiq Pay. Please open this app in the Nimiq Minipay application.'
+    );
+  }
+
+  // Fetch the list of accounts; the first one is the active address
+  const accounts = await provider.listAccounts();
+
+  if (!accounts || (accounts as any).error) {
+    throw new Error('Could not retrieve wallet accounts from Nimiq Pay.');
+  }
+
+  const address = (accounts as string[])[0];
+  if (!address) {
+    throw new Error('No accounts found in Nimiq Pay wallet.');
+  }
+
+  activeAddress = address;
+  localStorage.setItem('nimiq_wallet_address', address);
+  return address;
+}
+
+/**
+ * Sign an arbitrary text message. Returns { publicKey, signature }.
+ */
+export async function signMessage(message: string): Promise<{ publicKey: string; signature: string }> {
+  if (!provider) throw new Error('Wallet not connected. Call connectWallet() first.');
+
+  const result = await provider.sign(message);
+
+  if ((result as any).error) {
+    throw new Error((result as any).error.message || 'Failed to sign message.');
+  }
+
+  return result as { publicKey: string; signature: string };
+}
+
+/**
+ * Send a basic NIM transaction.
+ * @param recipient  Nimiq address string (with or without spaces)
+ * @param amountNIM  Amount in NIM (will be converted to Lunas internally)
+ * @param dataHex    Optional hex-encoded extra data string
+ */
+export async function sendTransaction(
+  recipient: string,
+  amountNIM: number,
+  dataHex?: string
+): Promise<string> {
+  if (!provider) throw new Error('Wallet not connected. Call connectWallet() first.');
+
+  const lunas = Math.round(amountNIM * 100_000);
+
+  let result: string | { error: any };
+
+  if (dataHex) {
+    result = await provider.sendBasicTransactionWithData({
+      recipient,
+      value: lunas,
+      data: dataHex,
+    });
+  } else {
+    result = await provider.sendBasicTransaction({ recipient, value: lunas });
+  }
+
+  if (typeof result !== 'string' && (result as any).error) {
+    throw new Error((result as any).error.message || 'Transaction failed.');
+  }
+
+  return result as string; // transaction hash
+}
+
+/**
+ * Fetch the live testnet balance for the connected address via the Nimiq RPC.
+ */
+export async function getBalance(): Promise<number> {
+  if (!activeAddress) return 0;
+
+  const normalized = activeAddress.replace(/\s+/g, '');
+
+  try {
+    const res = await fetch('https://rpc.testnet.nimiqwatch.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'getAccountByAddress',
+        params: [normalized],
+        id: 1,
+      }),
+    });
+
+    const data = await res.json();
+    if (data?.result?.data?.balance != null) {
+      return data.result.data.balance / 100_000;
+    }
+  } catch (err) {
+    console.error('Failed to fetch Nimiq balance:', err);
+  }
+
+  return 0;
+}
+
+/** Disconnect: clear the cached provider and address. */
+export function disconnectWallet() {
+  provider = null;
+  activeAddress = null;
+  localStorage.removeItem('nimiq_wallet_address');
+}
+
+/** Return the currently-connected address, or null if not connected. */
+export function getActiveAddress(): string | null {
+  return activeAddress;
+}
