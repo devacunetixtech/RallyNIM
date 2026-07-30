@@ -33,6 +33,20 @@ export class ClaimService {
       if (!stage) throw new Error('Stage not found');
       if (stage.status !== 'active') throw new Error('Stage is not active');
 
+      // Enforce sequential stage claiming: if stage order is > 1, must have claimed previous stage (order - 1)
+      if (stage.order > 1) {
+        const prevStage = await Stage.findOne({ campaignId: campaign._id, order: stage.order - 1 }).session(session);
+        if (prevStage) {
+          const claimedPrev = await Claim.findOne({
+            stageId: prevStage._id,
+            walletAddress: cleanAddress,
+          }).session(session);
+          if (!claimedPrev) {
+            throw new Error('Complete previous stages to unlock this one.');
+          }
+        }
+      }
+
       // 2. Validate Budget and Capacity
       if (campaign.remainingPool < stage.rewardAmount) {
         throw new Error('Reward pool is exhausted');

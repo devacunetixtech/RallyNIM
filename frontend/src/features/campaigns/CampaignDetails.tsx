@@ -133,7 +133,8 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
             <div className="space-y-4">
               {stages.map((stage, idx) => {
                 const isClaimed = claimHistory.some(ch => ch.stageId?._id === stage._id);
-                const isActive = stage.status === 'active';
+                const hasClaimedPrev = idx === 0 || claimHistory.some(ch => ch.stageId?._id === stages[idx - 1]._id);
+                const isActive = stage.status === 'active' && hasClaimedPrev;
                 
                 return (
                   <StageVerificationCard 

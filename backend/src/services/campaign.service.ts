@@ -157,9 +157,9 @@ export class CampaignService {
     campaign.status = 'live';
     await campaign.save();
 
-    // Activate the first stage
-    await Stage.findOneAndUpdate(
-      { campaignId: campaign._id, order: 1 },
+    // Activate all stages
+    await Stage.updateMany(
+      { campaignId: campaign._id },
       { status: 'active' }
     );
 
