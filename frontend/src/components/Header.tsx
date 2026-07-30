@@ -86,8 +86,8 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Network Tag - Hidden on mobile screens */}
               <span className={`hidden sm:inline-block text-[8px] sm:text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full ${
                 import.meta.env.VITE_NETWORK === 'mainnet'
-                  ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                  : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
               }`}>
                 {import.meta.env.VITE_NETWORK === 'mainnet' ? 'MAINNET' : 'TESTNET'}
               </span>
