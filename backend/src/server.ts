@@ -19,7 +19,7 @@ const startServer = async () => {
   const shutdown = () => {
     console.log('Shutting down server gracefully...');
     server.close(() => {
-      console.log('Server shut down complete.');
+      console.log('Server shut down completly.');
       process.exit(0);
     });
   };
