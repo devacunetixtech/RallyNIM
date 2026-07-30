@@ -51,7 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
         <img 
           src="/Assets/RallyPrimaryLogo.png" 
           alt="RallyNIM" 
-          className="h-10 w-auto object-contain" 
+          className="h-[100px] w-auto object-contain" 
         />
         <div className="hidden md:flex flex-col border-l border-white/10 dark:border-slate-800/50 pl-4">
           <p className="text-[10px] text-slate-400 font-medium tracking-wide">Event Engagement &amp; Escrow Rewards</p>
