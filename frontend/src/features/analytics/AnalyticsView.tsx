@@ -25,9 +25,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   }
 
   // Filter campaigns created by this organizer
-  const myCampaigns = campaigns.filter(
-    (c) => c.organizerId === organizerId || c.organizerId?._id === organizerId
-  );
+  const myCampaigns = campaigns.filter((c) => {
+    const org = c.organizer || c.organizerId;
+    const orgId = typeof org === 'object' ? org?._id : org;
+    return orgId === organizerId;
+  });
   const myCampaignIds = myCampaigns.map((c) => c._id);
 
   // Filter claims belonging to organizer campaigns

@@ -67,6 +67,31 @@ function getHubApi(): HubApi {
 }
 
 /**
+ * Automatically query the injected Nimiq Pay provider on load to get the active account address.
+ */
+export async function syncNimiqPayAddress(): Promise<string | null> {
+  if (!isInsideNimiqPay()) return null;
+  try {
+    if (!minipayProvider) {
+      minipayProvider = await init({ timeout: 2000 });
+    }
+    if (minipayProvider) {
+      const accounts = await minipayProvider.listAccounts();
+      if (accounts && !(accounts as any).error && (accounts as string[]).length > 0) {
+        const address = (accounts as string[])[0];
+        const normalized = address.replace(/\s+/g, '').toLowerCase();
+        activeAddress = normalized;
+        localStorage.setItem('nimiq_wallet_address', normalized);
+        return normalized;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to sync Nimiq Pay address:', err);
+  }
+  return null;
+}
+
+/**
  * Connect the wallet. Automatically detects environment and uses the appropriate provider.
  */
 export async function connectWallet(): Promise<string> {

@@ -145,8 +145,8 @@ export const PassportView: React.FC<PassportViewProps> = ({
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
-                  <span className="text-xs font-extrabold text-nimiq-gold">
-                    +{claim.reward} NIM
+                  <span className={`text-xs font-extrabold ${user?.role === 'organizer' ? 'text-rose-400' : 'text-nimiq-gold'}`}>
+                    {user?.role === 'organizer' ? '-' : '+'}{claim.reward} NIM
                   </span>
                   <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
                     claim.status === 'completed' || claim.status === 'success'

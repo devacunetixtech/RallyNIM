@@ -240,3 +240,10 @@ p {
 .border-nimiq-gold {
   border-color: var(--color-nimiq-gold);
 }
+
+/* Light mode slate text color overrides to ensure readable text contrast */
+.light .text-slate-100 { color: #0F172A !important; }
+.light .text-slate-200 { color: #1E293B !important; }
+.light .text-slate-300 { color: #334155 !important; }
+.light .text-slate-400 { color: #475569 !important; }
+.light .text-slate-500 { color: #64748B !important; }

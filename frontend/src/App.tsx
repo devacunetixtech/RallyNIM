@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 import { useAuthStore } from './store/useAuthStore';
-import { connectWallet, signMessage as nimiqSignMessage, getBalance as nimiqGetBalance, disconnectWallet, getActiveAddress, sendTransaction as nimiqSendTransaction, isInsideNimiqPay } from './lib/nimiq';
+import { connectWallet, signMessage as nimiqSignMessage, getBalance as nimiqGetBalance, disconnectWallet, getActiveAddress, sendTransaction as nimiqSendTransaction, isInsideNimiqPay, syncNimiqPayAddress } from './lib/nimiq';
 import { api } from './lib/api';
 
 // Components
@@ -85,14 +85,26 @@ export default function App() {
   const [qrCountdown, setQrCountdown] = useState(20);
   const [activeQrStageId, setActiveQrStageId] = useState<string | null>(null);
 
-  // Load initial data
+  // Load initial data and sync mobile address
   useEffect(() => {
-    fetchCampaigns();
-    if (isAuthenticated) {
-      fetchPassport();
-      updateBalance();
-      fetchHistory();
-    }
+    const initApp = async () => {
+      await fetchCampaigns();
+      if (isAuthenticated) {
+        if (isInsideNimiqPay()) {
+          const synced = await syncNimiqPayAddress();
+          if (synced && user && user.walletAddress.toLowerCase() !== synced.toLowerCase()) {
+            setAuth(useAuthStore.getState().token || '', {
+              ...user,
+              walletAddress: synced
+            });
+          }
+        }
+        await fetchPassport();
+        await updateBalance();
+        await fetchHistory();
+      }
+    };
+    initApp();
   }, [isAuthenticated]);
 
   // Periodically refresh balance while connected to show live blockchain state
@@ -222,29 +234,6 @@ export default function App() {
             }
           ]
         },
-        {
-          title: 'Paris Web3 Blockchain Summit',
-          description: 'Gathering of top European Web3 builders to discuss decentralized UI developments and Nimiq Pay integration.',
-          category: 'Summit',
-          rewardPool: 500,
-          location: 'Palais des Congrès, Paris',
-          latitude: 48.878776,
-          longitude: 2.283457,
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 86400000 * 3).toISOString(),
-          stages: [
-            {
-              title: 'Escrow Keynote Attendee',
-              description: 'Scan the screen after the Nimiq smart wallet keynote.',
-              rewardType: 'fixed',
-              rewardAmount: 50,
-              verificationMethod: 'dynamic_qr',
-              maximumClaims: 80,
-              startsAt: new Date(),
-              endsAt: new Date(Date.now() + 86400000)
-            }
-          ]
-        }
       ];
 
       for (const campaign of mockCampaigns) {
