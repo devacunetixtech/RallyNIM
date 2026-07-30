@@ -44,6 +44,20 @@ export default function App() {
   const [myPassport, setMyPassport] = useState<any>(null);
   const [claimHistory, setClaimHistory] = useState<any[]>([]);
   
+  // Theme state
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Toggle theme
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  };
+  
   // Campaign Creator state
   const [newCampaign, setNewCampaign] = useState({
     title: '',
@@ -470,6 +484,8 @@ export default function App() {
         setSelectedRole={setSelectedRole}
         onConnect={handleConnectWallet}
         onDisconnect={handleDisconnect}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* FEEDBACK BANNERS */}
@@ -481,7 +497,7 @@ export default function App() {
       />
 
       {/* MAIN LAYOUT */}
-      <main className="min-h-[60vh] space-y-6">
+      <main className="min-h-[60vh] space-y-6 mt-8">
         
         {/* TAB NAVIGATION */}
         <div className="flex gap-2.5 border-b border-white/5 pb-3 overflow-x-auto">
