@@ -95,6 +95,15 @@ export default function App() {
     }
   }, [isAuthenticated]);
 
+  // Periodically refresh balance while connected to show live blockchain state
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => {
+      updateBalance();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   // QR token rotation timer
   useEffect(() => {
     let interval: any;

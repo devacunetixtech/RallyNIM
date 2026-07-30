@@ -243,7 +243,7 @@ export async function sendTransaction(
 export async function getBalance(): Promise<number> {
   if (!activeAddress) return 0;
 
-  const normalized = activeAddress.replace(/\s+/g, '');
+  const normalized = activeAddress.replace(/\s+/g, '').toUpperCase();
 
   try {
     const res = await fetch('https://rpc.testnet.nimiqwatch.com', {
