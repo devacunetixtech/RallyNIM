@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { config } from '../config/environment';
 import { campaignService } from '../services/campaign.service';
 import { createCampaignSchema } from '../validators/campaign.validator';
 
@@ -33,10 +35,29 @@ export class CampaignController {
   public list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { category, status, organizer } = req.query;
+
+      // Extract optional requesting user from Authorization header
+      let requestingUserId: string | undefined = undefined;
+      let requestingUserRole: string | undefined = undefined;
+
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+          const decoded = jwt.verify(token, config.jwtSecret) as any;
+          requestingUserId = decoded.userId;
+          requestingUserRole = decoded.role;
+        } catch (e) {
+          // Ignore invalid tokens, treat as public
+        }
+      }
+
       const campaigns = await campaignService.getCampaigns({
         category: category as string,
         status: status as string,
         organizer: organizer as string,
+        requestingUserId,
+        requestingUserRole,
       });
 
       res.status(200).json({ campaigns });
@@ -52,6 +73,30 @@ export class CampaignController {
     try {
       const { id } = req.params;
       const { campaign, stages } = await campaignService.getCampaignById(id);
+
+      // If the campaign is a draft, verify that the requester is the organizer who owns it
+      if (campaign.status === 'draft') {
+        let isAuthorized = false;
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.split(' ')[1];
+          try {
+            const decoded = jwt.verify(token, config.jwtSecret) as any;
+            const orgId = campaign.organizer.toString();
+            if (decoded.userId === orgId) {
+              isAuthorized = true;
+            }
+          } catch (e) {
+            // Unauthenticated/Invalid Token
+          }
+        }
+
+        if (!isAuthorized) {
+          res.status(403).json({ error: 'Access denied: Draft campaigns are only accessible by their organizer.' });
+          return;
+        }
+      }
+
       res.status(200).json({ campaign, stages });
     } catch (error: any) {
       res.status(404).json({ error: error.message || 'Campaign not found' });

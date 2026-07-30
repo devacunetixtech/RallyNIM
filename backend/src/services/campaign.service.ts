@@ -59,12 +59,40 @@ export class CampaignService {
     category?: string;
     status?: string;
     organizer?: string;
+    requestingUserId?: string;
+    requestingUserRole?: string;
   }): Promise<ICampaign[]> {
     const query: any = {};
     
     if (filters.category) query.category = filters.category;
-    if (filters.status) query.status = filters.status;
     if (filters.organizer) query.organizer = filters.organizer;
+
+    // Filter by status or enforce draft visibility
+    if (filters.status) {
+      if (filters.status === 'draft') {
+        // Enforce that you can only request 'draft' if you are the organizer of those drafts
+        if (filters.requestingUserRole === 'organizer' && filters.requestingUserId) {
+          query.status = 'draft';
+          query.organizer = filters.requestingUserId;
+        } else {
+          // Non-organizers cannot view drafts
+          return [];
+        }
+      } else {
+        query.status = filters.status;
+      }
+    } else {
+      // No specific status requested: return all non-draft campaigns,
+      // plus draft campaigns belonging to the requesting organizer.
+      if (filters.requestingUserRole === 'organizer' && filters.requestingUserId) {
+        query.$or = [
+          { status: { $ne: 'draft' } },
+          { status: 'draft', organizer: filters.requestingUserId }
+        ];
+      } else {
+        query.status = { $ne: 'draft' };
+      }
+    }
 
     return Campaign.find(query).sort({ createdAt: -1 });
   }
