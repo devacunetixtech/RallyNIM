@@ -285,7 +285,10 @@ export default function App() {
       const signatureMessage = `Sign this message to authenticate with RallyNIM. Nonce: ${nonce}`;
       const { publicKey, signature } = await nimiqSignMessage(signatureMessage);
 
-      const response = await api.auth.verify(address, signature, publicKey, selectedRole);
+      // In case the user signed with a different address in the Hub than first chosen,
+      // use the updated active address returned by the signing flow.
+      const actualAddress = getActiveAddress() || address;
+      const response = await api.auth.verify(actualAddress, signature, publicKey, selectedRole);
 
       setAuth(response.token, {
         ...response.user,

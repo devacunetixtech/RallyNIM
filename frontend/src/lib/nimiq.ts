@@ -106,6 +106,15 @@ async function connectViaHub(): Promise<string> {
 }
 
 /**
+ * Formats a raw Nimiq address into user-friendly uppercase spaced format
+ */
+export function toUserFriendlyAddress(address: string): string {
+  const clean = address.replace(/\s+/g, '').toUpperCase();
+  const groups = clean.match(/.{1,4}/g);
+  return groups ? groups.join(' ') : address;
+}
+
+/**
  * Sign an arbitrary message. Automatically chooses the active environment provider.
  */
 export async function signMessage(message: string): Promise<{ publicKey: string; signature: string }> {
@@ -121,20 +130,58 @@ export async function signMessage(message: string): Promise<{ publicKey: string;
     return result as { publicKey: string; signature: string };
   } else {
     // Standard Web Browser / Desktop Flow
-    const result = await getHubApi().signMessage({
-      appName: 'RallyNIM',
-      message,
-      signer: activeAddress || undefined,
-    });
+    const formattedSigner = activeAddress ? toUserFriendlyAddress(activeAddress) : undefined;
+    const encodedMessage = new TextEncoder().encode(message);
 
-    if (!result) {
-      throw new Error('Message signing cancelled or failed.');
+    try {
+      const result = await getHubApi().signMessage({
+        appName: 'RallyNIM',
+        message: encodedMessage,
+        signer: formattedSigner,
+      });
+
+      if (!result) {
+        throw new Error('Message signing cancelled or failed.');
+      }
+
+      // If signer was returned, synchronize the activeAddress
+      if (result.signer) {
+        const normalizedSigner = result.signer.replace(/\s+/g, '').toLowerCase();
+        if (activeAddress !== normalizedSigner) {
+          activeAddress = normalizedSigner;
+          localStorage.setItem('nimiq_wallet_address', normalizedSigner);
+        }
+      }
+
+      return {
+        publicKey: toHexString(result.signerPublicKey),
+        signature: toHexString(result.signature),
+      };
+    } catch (err: any) {
+      console.warn('signMessage failed with signer constraint, retrying without signer parameter:', err);
+
+      // Fallback: request signature without signer constraint (lets user choose their account in Hub)
+      const result = await getHubApi().signMessage({
+        appName: 'RallyNIM',
+        message: encodedMessage,
+      });
+
+      if (!result) {
+        throw new Error('Message signing cancelled or failed.');
+      }
+
+      // Synchronize the activeAddress with the selected signer
+      if (result.signer) {
+        const normalizedSigner = result.signer.replace(/\s+/g, '').toLowerCase();
+        activeAddress = normalizedSigner;
+        localStorage.setItem('nimiq_wallet_address', normalizedSigner);
+      }
+
+      return {
+        publicKey: toHexString(result.signerPublicKey),
+        signature: toHexString(result.signature),
+      };
     }
-
-    return {
-      publicKey: toHexString(result.signerPublicKey),
-      signature: toHexString(result.signature),
-    };
   }
 }
 
