@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Calendar, Award, Layers } from 'lucide-react';
+import { MapPin, Calendar, Award, Layers, RefreshCw } from 'lucide-react';
 import { StageVerificationCard } from '../rewards/StageVerificationCard';
 import { QrTerminal } from '../rewards/QrTerminal';
 
@@ -124,37 +124,44 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
             Event Stages Timeline
           </h3>
 
-          <div className="space-y-4">
-            {stages.map((stage, idx) => {
-              const isClaimed = claimHistory.some(ch => ch.stageId?._id === stage._id);
-              const isActive = stage.status === 'active';
-              
-              return (
-                <StageVerificationCard 
-                  key={stage._id}
-                  stage={stage}
-                  idx={idx}
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                  isClaimed={isClaimed}
-                  isActive={isActive}
-                  activeVerificationStage={activeVerificationStage}
-                  setActiveVerificationStage={setActiveVerificationStage}
-                  verificationInput={verificationInput}
-                  setVerificationInput={setVerificationInput}
-                  quizAnswers={quizAnswers}
-                  setQuizAnswers={setQuizAnswers}
-                  onClaim={onClaim}
-                  loading={loading}
-                  organizerQrToken={organizerQrToken}
-                  setSuccessMessage={setSuccessMessage}
-                  onLaunchTerminal={(id) => {
-                    setActiveQrStageId(id);
-                  }}
-                />
-              );
-            })}
-          </div>
+          {loading ? (
+            <div className="glass-panel bg-white/[0.01] border border-white/5 rounded-xl p-8 flex flex-col items-center justify-center min-h-[150px] animate-pulse">
+              <RefreshCw size={28} className="animate-spin text-nimiq-gold mb-2" />
+              <span className="text-xs text-slate-500 font-medium">Loading event stages...</span>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {stages.map((stage, idx) => {
+                const isClaimed = claimHistory.some(ch => ch.stageId?._id === stage._id);
+                const isActive = stage.status === 'active';
+                
+                return (
+                  <StageVerificationCard 
+                    key={stage._id}
+                    stage={stage}
+                    idx={idx}
+                    isAuthenticated={isAuthenticated}
+                    user={user}
+                    isClaimed={isClaimed}
+                    isActive={isActive}
+                    activeVerificationStage={activeVerificationStage}
+                    setActiveVerificationStage={setActiveVerificationStage}
+                    verificationInput={verificationInput}
+                    setVerificationInput={setVerificationInput}
+                    quizAnswers={quizAnswers}
+                    setQuizAnswers={setQuizAnswers}
+                    onClaim={onClaim}
+                    loading={loading}
+                    organizerQrToken={organizerQrToken}
+                    setSuccessMessage={setSuccessMessage}
+                    onLaunchTerminal={(id) => {
+                      setActiveQrStageId(id);
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

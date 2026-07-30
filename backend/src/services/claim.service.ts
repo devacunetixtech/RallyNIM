@@ -230,6 +230,18 @@ export class ClaimService {
       .populate('stageId', 'title description order rewardType')
       .sort({ claimedAt: -1 });
   }
+
+  /**
+   * Retrieves reward payout history for campaigns created by an organizer.
+   */
+  public async getOrganizerHistory(organizerId: string): Promise<IClaim[]> {
+    const campaigns = await Campaign.find({ organizer: organizerId }).select('_id');
+    const campaignIds = campaigns.map((c) => c._id);
+    return Claim.find({ campaignId: { $in: campaignIds } })
+      .populate('campaignId', 'title description')
+      .populate('stageId', 'title description order rewardType')
+      .sort({ claimedAt: -1 });
+  }
 }
 
 export const claimService = new ClaimService();

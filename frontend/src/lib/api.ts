@@ -18,6 +18,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const data = await response.json();
 
+  if (response.status === 401) {
+    useAuthStore.getState().clearAuth();
+    localStorage.removeItem('nimiq_wallet_address');
+  }
+
   if (!response.ok) {
     throw new Error(data.error || 'Something went wrong');
   }
@@ -70,7 +75,10 @@ export const api = {
       request<{ campaign: any }>(`/campaigns/${id}/publish`, {
         method: 'POST',
         body: JSON.stringify({ txHash })
-      })
+      }),
+      
+    getEscrowAddress: () =>
+      request<{ escrowAddress: string }>('/campaigns/escrow/address')
   },
   
   rewards: {
@@ -82,6 +90,9 @@ export const api = {
       
     history: () =>
       request<{ history: any[] }>('/reward/history'),
+      
+    organizerHistory: () =>
+      request<{ history: any[] }>('/reward/organizer/history'),
       
     generateQr: (stageId: string) =>
       request<{ token: string }>('/reward/qr/generate', {

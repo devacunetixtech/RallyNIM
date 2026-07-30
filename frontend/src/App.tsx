@@ -141,8 +141,13 @@ export default function App() {
 
   const fetchHistory = async () => {
     try {
-      const res = await api.rewards.history();
-      setClaimHistory(res.history);
+      if (user?.role === 'organizer') {
+        const res = await api.rewards.organizerHistory();
+        setClaimHistory(res.history);
+      } else {
+        const res = await api.rewards.history();
+        setClaimHistory(res.history);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -415,7 +420,8 @@ export default function App() {
       const res = await api.campaigns.create(newCampaign, newStages);
       
       // Fund campaign using Nimiq escrow service
-      const escrowAddress = 'NQ34 G6XF HT9Y SMQ2 YS1X U29D E91X 557U F31P';
+      const configRes = await api.campaigns.getEscrowAddress();
+      const escrowAddress = configRes.escrowAddress;
       const txHash = await nimiqSendTransaction(escrowAddress, newCampaign.rewardPool, res.campaign._id);
       
       // Publish campaign to Live
@@ -580,6 +586,8 @@ export default function App() {
               <PassportView 
                 user={user}
                 myPassport={myPassport}
+                claimHistory={claimHistory}
+                loading={loading}
               />
             )}
 
@@ -596,7 +604,10 @@ export default function App() {
 
             {activeTab === 'analytics' && isAuthenticated && user?.role === 'organizer' && (
               <AnalyticsView 
-                claimHistoryLength={claimHistory.length}
+                claimHistory={claimHistory}
+                campaigns={campaigns}
+                organizerId={user?._id || ''}
+                loading={loading}
               />
             )}
           </motion.div>

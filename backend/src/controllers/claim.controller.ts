@@ -44,6 +44,19 @@ export class ClaimController {
   };
 
   /**
+   * Endpoint: GET /reward/organizer/history
+   */
+  public organizerHistory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const user = (req as any).user;
+      const history = await claimService.getOrganizerHistory(user._id.toString());
+      res.status(200).json({ history });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * Endpoint: POST /qr/generate (Organizer only)
    * Body: { stageId }
    */

@@ -103,6 +103,18 @@ export class CampaignController {
       res.status(400).json({ error: error.message });
     }
   };
+
+  /**
+   * Endpoint: GET /campaigns/escrow/address
+   */
+  public getEscrowAddress = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { config } = await import('../config/environment');
+      res.status(200).json({ escrowAddress: config.escrowWalletAddress });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export const campaignController = new CampaignController();

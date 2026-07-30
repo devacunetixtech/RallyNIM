@@ -6,6 +6,7 @@ const router = Router();
 
 // Public routes
 router.get('/', campaignController.list);
+router.get('/escrow/address', campaignController.getEscrowAddress);
 router.get('/:id', campaignController.getById);
 
 // Protected routes (Organizer only)

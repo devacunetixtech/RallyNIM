@@ -1,15 +1,27 @@
 import React from 'react';
-import { User, Award, Flame, Compass } from 'lucide-react';
+import { User, Award, Flame, Compass, Wallet, RefreshCw } from 'lucide-react';
 
 interface PassportViewProps {
   user: any;
   myPassport: any;
+  claimHistory: any[];
+  loading: boolean;
 }
 
 export const PassportView: React.FC<PassportViewProps> = ({
   user,
   myPassport,
+  claimHistory,
+  loading,
 }) => {
+  if (loading || !myPassport) {
+    return (
+      <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-8 shadow-glass flex flex-col items-center justify-center min-h-[300px] animate-pulse">
+        <RefreshCw size={36} className="animate-spin text-nimiq-gold mb-3" />
+        <span className="text-xs text-slate-400 font-medium">Fetching developer passport data...</span>
+      </div>
+    );
+  }
   return (
     <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-6 shadow-glass">
       
@@ -97,6 +109,66 @@ export const PassportView: React.FC<PassportViewProps> = ({
           </div>
         ) : (
           <p className="text-xs text-slate-500">No recent activity records.</p>
+        )}
+      </div>
+
+      {/* Payout History */}
+      <div className="mt-6 border-t border-white/5 pt-6">
+        <h4 className="text-sm font-bold text-slate-200 mb-3 flex items-center gap-1.5">
+          <Wallet size={15} className="text-nimiq-gold" />
+          Reward Payout History
+        </h4>
+        {claimHistory && claimHistory.length > 0 ? (
+          <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+            {claimHistory.map((claim: any, i: number) => (
+              <div 
+                key={i} 
+                className="bg-white/[0.005] hover:bg-white/[0.01] border border-white/5 p-3 rounded-lg flex justify-between items-center transition-colors duration-150"
+              >
+                <div>
+                  <div className="text-xs font-bold text-slate-300">
+                    {claim.stageId?.title || 'Claim Reward'}
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">
+                    Campaign: {claim.campaignId?.title || 'Unknown'}
+                  </div>
+                  {claim.transactionHash && (
+                    <a
+                      href={`https://testnet.nimiq.watch/#/transaction/${claim.transactionHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[9px] text-sky-400 hover:text-sky-300 underline font-mono block mt-1"
+                    >
+                      Tx: {claim.transactionHash.slice(0, 10)}···{claim.transactionHash.slice(-8)}
+                    </a>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-1.5">
+                  <span className="text-xs font-extrabold text-nimiq-gold">
+                    +{claim.reward} NIM
+                  </span>
+                  <span className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                    claim.status === 'completed' || claim.status === 'success'
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : claim.status === 'failed'
+                      ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse'
+                  }`}>
+                    <span className={`w-1 h-1 rounded-full ${
+                      claim.status === 'completed' || claim.status === 'success'
+                        ? 'bg-emerald-400'
+                        : claim.status === 'failed'
+                        ? 'bg-red-400'
+                        : 'bg-amber-400'
+                    }`} />
+                    {claim.status === 'completed' || claim.status === 'success' ? 'Delivered' : claim.status === 'failed' ? 'Failed' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500">No payout transactions recorded yet.</p>
         )}
       </div>
     </div>

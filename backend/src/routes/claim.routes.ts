@@ -9,6 +9,7 @@ const router = Router();
 // Participant and Organizer routes (Protected)
 router.post('/claim', authMiddleware, claimRateLimiter, claimController.claim);
 router.get('/history', authMiddleware, claimController.history);
+router.get('/organizer/history', authMiddleware, requireRole(['organizer']), claimController.organizerHistory);
 
 // Dynamic QR generation (Organizer only)
 router.post(
