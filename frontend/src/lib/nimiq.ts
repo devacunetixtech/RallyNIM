@@ -51,8 +51,8 @@ const network = import.meta.env.VITE_NETWORK === 'mainnet' ? 'mainnet' : 'testne
  */
 export function getExplorerUrl(txHash: string): string {
   return network === 'mainnet'
-    ? `https://nimiq.watch/#/transaction/${txHash}`
-    : `https://testnet.nimiq.watch/#/transaction/${txHash}`;
+    ? `https://nimiq.watch/#${txHash}`
+    : `https://test.nimiq.watch/#${txHash}`;
 }
 
 /**
