@@ -34,6 +34,8 @@ export class CampaignService {
           order: index + 1,
           status: index === 0 ? 'upcoming' : 'locked', // first stage is ready to unlock
           claimed: 0,
+          startsAt: stageData.startsAt || campaign.startDate,
+          endsAt: stageData.endsAt || campaign.endDate,
         });
         await stage.save({ session });
         stages.push(stage);
