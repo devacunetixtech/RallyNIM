@@ -84,8 +84,12 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Unified Wallet Pill Badge */}
             <div className="flex items-center gap-2 bg-white/[0.03] dark:bg-slate-950/20 px-3.5 py-1.5 rounded-full border border-white/5 dark:border-slate-800/30 flex-1 md:flex-none justify-center">
               {/* Network Tag - Hidden on mobile screens */}
-              <span className="hidden sm:inline-block text-[8px] sm:text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                TESTNET
+              <span className={`hidden sm:inline-block text-[8px] sm:text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full ${
+                import.meta.env.VITE_NETWORK === 'mainnet'
+                  ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                  : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+              }`}>
+                {import.meta.env.VITE_NETWORK === 'mainnet' ? 'MAINNET' : 'TESTNET'}
               </span>
 
               {/* Status Indicator */}
