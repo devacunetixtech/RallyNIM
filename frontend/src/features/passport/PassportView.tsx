@@ -34,6 +34,9 @@ export const PassportView: React.FC<PassportViewProps> = ({
           <div className="text-xl font-extrabold text-nimiq-gold mt-1">
             {myPassport ? myPassport.totalNIMEarned : 0} NIM
           </div>
+          <div className="text-[9px] text-slate-400 mt-2 leading-tight">
+            Sent directly on-chain to connected wallet
+          </div>
         </div>
 
         <div className="bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 p-4 rounded-xl text-center transition-colors duration-150">

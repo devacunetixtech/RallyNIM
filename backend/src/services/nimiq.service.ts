@@ -128,8 +128,8 @@ export class NimiqService {
       const recipient = Nimiq.Address.fromUserFriendlyAddress(targetAddress);
       
       const value = BigInt(Math.round(amountInNIM * 100000)); // NIM to Lunas
-      const fee = BigInt(0);
-      const networkId = config.network === 'mainnet' ? 1 : 2;
+      const fee = BigInt(150); // 150 Lunas fee (0.0015 NIM) to ensure validators mine it
+      const networkId = config.network === 'mainnet' ? 24 : 5; // MainAlbatross = 24, TestAlbatross = 5
 
       // Get current block height
       logger.info('Fetching current block height for transaction validity start height...');

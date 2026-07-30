@@ -382,7 +382,15 @@ export default function App() {
         
         handleSelectCampaign(selectedCampaign._id);
         fetchPassport();
-        updateBalance();
+        
+        // Poll for balance updates on-chain over the next 10 seconds to account for block mining latency
+        let polls = 0;
+        const pollInterval = setInterval(async () => {
+          await updateBalance();
+          polls++;
+          if (polls >= 5) clearInterval(pollInterval);
+        }, 2000);
+
         fetchHistory();
       }
     } catch (err: any) {
