@@ -342,7 +342,16 @@ export const CampaignCreator: React.FC<CampaignCreatorProps> = ({
                   />
                 </div>
                 {gpsError && (
-                  <p className="text-[10px] text-rose-400 font-semibold">{gpsError}</p>
+                  <div className="space-y-2">
+                    <p className="text-[10px] text-rose-400 font-semibold">{gpsError}</p>
+                    {window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl">
+                        <p className="text-[9px] text-amber-400 leading-normal font-medium">
+                          <strong>Note:</strong> Geolocation requires a Secure Context (HTTPS) on mobile devices. If testing via local IP (HTTP), the mobile webview blocks the location prompt. Please use a secure tunnel (e.g. <code>ngrok</code>) to test location services on mobile.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 )}
                 <p className="text-[10px] text-slate-500">
                   Entering GPS coordinates restricts claim rewards to a 200-meter physical boundary. Leave blank to bypass geofence checks.
