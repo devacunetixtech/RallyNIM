@@ -256,6 +256,35 @@ export async function getBalance(): Promise<number> {
   if (!activeAddress) return 0;
 
   const normalized = activeAddress.replace(/\s+/g, '').toUpperCase();
+
+  // If inside Nimiq Pay, try querying their injected provider first to bypass any webview/CORS restrictions
+  if (isInsideNimiqPay()) {
+    try {
+      if (!minipayProvider) {
+        minipayProvider = await init({ timeout: 2000 });
+      }
+      if (minipayProvider) {
+        // Ensure provider has an RPC URL configured. If not, set it to our default testnet/mainnet node.
+        const hasRpc = minipayProvider.getRPC();
+        if (!hasRpc) {
+          const defaultRpc = network === 'mainnet' ? 'https://rpc.nimiqwatch.com' : 'https://rpc.testnet.nimiqwatch.com';
+          minipayProvider.setRPCUrl(defaultRpc);
+        }
+
+        const data = await minipayProvider.request<any>({
+          method: 'getAccountByAddress',
+          params: [normalized],
+        });
+        if (data && data.balance != null) {
+          return data.balance / 100_000;
+        }
+      }
+    } catch (err) {
+      console.warn('Nimiq Pay balance request failed, falling back to standard fetch:', err);
+    }
+  }
+
+  // Fallback / Standard Web Browser Flow
   const rpcUrl = network === 'mainnet' ? 'https://rpc.nimiqwatch.com' : 'https://rpc.testnet.nimiqwatch.com';
 
   try {

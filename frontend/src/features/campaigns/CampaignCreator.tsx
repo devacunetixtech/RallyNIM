@@ -55,6 +55,7 @@ export const CampaignCreator: React.FC<CampaignCreatorProps> = ({
     setGpsLoading(true);
     setGpsError(null);
 
+    // Try with high accuracy first (usually fires GPS chip)
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setNewCampaign((prev: any) => ({
@@ -65,10 +66,27 @@ export const CampaignCreator: React.FC<CampaignCreatorProps> = ({
         setGpsLoading(false);
       },
       (error) => {
-        setGpsError("Failed to lock GPS. Make sure location permissions are enabled.");
-        setGpsLoading(false);
+        console.warn("High-accuracy GPS request failed, retrying with standard accuracy...", error);
+        
+        // Fallback: Try with lower accuracy, allowing cached positions up to 5 minutes old
+        navigator.geolocation.getCurrentPosition(
+          (fallbackPos) => {
+            setNewCampaign((prev: any) => ({
+              ...prev,
+              latitude: parseFloat(fallbackPos.coords.latitude.toFixed(6)),
+              longitude: parseFloat(fallbackPos.coords.longitude.toFixed(6)),
+            }));
+            setGpsLoading(false);
+          },
+          (fallbackError) => {
+            console.error("Standard GPS request failed:", fallbackError);
+            setGpsError("GPS permission denied or unavailable in this webview. You can type coordinates manually below.");
+            setGpsLoading(false);
+          },
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+        );
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 4000 }
     );
   };
 
