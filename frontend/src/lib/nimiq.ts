@@ -44,12 +44,24 @@ export function isInsideNimiqPay(): boolean {
   return typeof window !== 'undefined' && Boolean((window as any).nimiq);
 }
 
+const network = import.meta.env.VITE_NETWORK === 'mainnet' ? 'mainnet' : 'testnet';
+
 /**
- * Get or initialize the standard Nimiq Hub API client (pointing to Nimiq Testnet Hub)
+ * Get the block explorer transaction link based on network environment
+ */
+export function getExplorerUrl(txHash: string): string {
+  return network === 'mainnet'
+    ? `https://nimiq.watch/#/transaction/${txHash}`
+    : `https://testnet.nimiq.watch/#/transaction/${txHash}`;
+}
+
+/**
+ * Get or initialize the standard Nimiq Hub API client
  */
 function getHubApi(): HubApi {
   if (!hubApiInstance) {
-    hubApiInstance = new HubApi('https://hub.nimiq-testnet.com');
+    const hubUrl = network === 'mainnet' ? 'https://hub.nimiq.com' : 'https://hub.nimiq-testnet.com';
+    hubApiInstance = new HubApi(hubUrl);
   }
   return hubApiInstance;
 }
@@ -238,15 +250,16 @@ export async function sendTransaction(
 }
 
 /**
- * Fetch the live testnet balance for the connected address via the Nimiq RPC.
+ * Fetch the live balance for the connected address via the Nimiq RPC.
  */
 export async function getBalance(): Promise<number> {
   if (!activeAddress) return 0;
 
   const normalized = activeAddress.replace(/\s+/g, '').toUpperCase();
+  const rpcUrl = network === 'mainnet' ? 'https://rpc.nimiqwatch.com' : 'https://rpc.testnet.nimiqwatch.com';
 
   try {
-    const res = await fetch('https://rpc.testnet.nimiqwatch.com', {
+    const res = await fetch(rpcUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

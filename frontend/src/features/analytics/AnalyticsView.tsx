@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart2, TrendingUp, Wallet, ArrowUpRight, RefreshCw } from 'lucide-react';
+import { getExplorerUrl } from '../../lib/nimiq';
 
 interface AnalyticsViewProps {
   claimHistory: any[];
@@ -18,70 +19,99 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     return (
       <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-8 shadow-glass flex flex-col items-center justify-center min-h-[300px] animate-pulse">
         <RefreshCw size={36} className="animate-spin text-nimiq-gold mb-3" />
-        <span className="text-xs text-slate-400 font-medium">Fetching campaign analytics...</span>
+        <span className="text-xs text-slate-400 font-medium">Loading campaign analytics...</span>
       </div>
     );
   }
 
-  const claimHistoryLength = claimHistory.length;
-  const totalClaimsDisbursed = claimHistory.reduce((acc, c) => acc + (c.reward || 0), 0);
-
   // Filter campaigns created by this organizer
-  const organizerCampaigns = campaigns.filter(
-    (c) => c.organizer === organizerId || c.organizer?._id === organizerId
+  const myCampaigns = campaigns.filter(
+    (c) => c.organizerId === organizerId || c.organizerId?._id === organizerId
   );
-  
-  // Total NIM remaining in campaigns (locked in escrow)
-  const totalEscrowLocked = organizerCampaigns.reduce(
-    (acc, c) => acc + (c.remainingPool || 0),
-    0
-  );
+  const myCampaignIds = myCampaigns.map((c) => c._id);
+
+  // Filter claims belonging to organizer campaigns
+  const myClaims = claimHistory.filter((claim) => {
+    const cid = claim.campaignId?._id || claim.campaignId;
+    return myCampaignIds.includes(cid);
+  });
+
+  // Aggregate total volume paid out from campaigns
+  const totalVolume = myClaims
+    .filter((c) => c.status === 'completed' || c.status === 'success')
+    .reduce((sum, c) => sum + c.reward, 0);
+
+  // Live total remaining escrow (NIM balance left locked in organizer's campaigns)
+  const remainingEscrow = myCampaigns.reduce((sum, c) => sum + (c.remainingPool || 0), 0);
 
   return (
-    <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-6 shadow-glass animate-fade-in">
-      <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2 mb-6">
-        <BarChart2 size={20} className="text-nimiq-gold" />
-        Campaign Performance Analytics
-      </h3>
-
-      {/* Analytics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-        <div className="bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 p-5 rounded-xl transition-colors duration-150">
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Escrow Locked</div>
-          <div className="text-2xl font-extrabold text-nimiq-gold mt-2">{totalEscrowLocked} NIM</div>
-          <div className="text-[10px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-            <TrendingUp size={12} />
-            +100% On-Chain Funded
+    <div className="space-y-6">
+      {/* Analytics Statistics Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Total Escrow Remaining */}
+        <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-5 shadow-glass relative overflow-hidden">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Active Escrow</p>
+              <h3 className="text-2xl font-black text-nimiq-gold mt-1.5 font-mono">{remainingEscrow.toLocaleString()} NIM</h3>
+            </div>
+            <div className="p-2 bg-nimiq-gold/10 text-nimiq-gold border border-nimiq-gold/20 rounded-xl">
+              <Wallet size={16} />
+            </div>
           </div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-4 leading-relaxed">
+            Live NIM remaining across all your active event campaigns
+          </p>
         </div>
 
-        <div className="bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 p-5 rounded-xl transition-colors duration-150">
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Claims Disbursed</div>
-          <div className="text-2xl font-extrabold text-slate-200 mt-2">
-            {totalClaimsDisbursed} NIM
+        {/* Total Volume Disbursed */}
+        <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-5 shadow-glass relative overflow-hidden">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Disbursed Rewards</p>
+              <h3 className="text-2xl font-black text-slate-200 mt-1.5 font-mono">{totalVolume.toLocaleString()} NIM</h3>
+            </div>
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl">
+              <TrendingUp size={16} />
+            </div>
           </div>
-          <div className="text-[10px] text-slate-500 mt-1">
-            Across {claimHistoryLength} successful stage check-ins
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-4 leading-relaxed">
+            Aggregate amount successfully paid out to check-in attendees
+          </p>
+        </div>
+
+        {/* Total Check-in Claims */}
+        <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-5 shadow-glass relative overflow-hidden">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Check-ins</p>
+              <h3 className="text-2xl font-black text-slate-200 mt-1.5 font-mono">{myClaims.length}</h3>
+            </div>
+            <div className="p-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-xl">
+              <BarChart2 size={16} />
+            </div>
           </div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-400 mt-4 leading-relaxed">
+            Number of stage check-ins submitted across your campaigns
+          </p>
         </div>
       </div>
 
-      {/* Organizer Payout History */}
-      <div className="bg-white/[0.005] border border-white/5 p-5 rounded-xl mb-6">
-        <h4 className="text-xs font-bold text-slate-300 mb-4 uppercase tracking-wider flex items-center gap-1.5">
-          <Wallet size={14} className="text-nimiq-gold" />
-          Disbursed Payout History
+      {/* Disbursed Payout History Section */}
+      <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-6 shadow-glass">
+        <h4 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-1.5">
+          <TrendingUp size={15} className="text-nimiq-gold" />
+          Disbursed Payouts History
         </h4>
-        
-        {claimHistory && claimHistory.length > 0 ? (
-          <div className="flex flex-col gap-2.5 max-h-72 overflow-y-auto pr-1">
-            {claimHistory.map((claim: any, i: number) => (
+        {myClaims.length > 0 ? (
+          <div className="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1">
+            {myClaims.map((claim: any, i: number) => (
               <div 
                 key={i} 
-                className="bg-white/[0.005] border border-white/5 p-3 rounded-lg flex justify-between items-center text-xs"
+                className="bg-white/[0.005] hover:bg-white/[0.01] border border-white/5 p-3.5 rounded-xl flex justify-between items-center transition-colors duration-150"
               >
                 <div>
-                  <div className="text-slate-300 font-semibold">
+                  <div className="text-xs font-bold text-slate-300">
                     {claim.stageId?.title || 'Stage Claim'}
                   </div>
                   <div className="text-[10px] text-slate-500 mt-0.5">
@@ -98,7 +128,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   <div className="flex items-center gap-2">
                     {claim.transactionHash && (
                       <a
-                        href={`https://testnet.nimiq.watch/#/transaction/${claim.transactionHash}`}
+                        href={getExplorerUrl(claim.transactionHash)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[9px] text-sky-400 hover:text-sky-300 flex items-center gap-0.5"
@@ -133,9 +163,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       </div>
 
       {/* Verification Breakdown */}
-      <div className="bg-white/[0.005] border border-white/5 p-5 rounded-xl">
+      <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 rounded-2xl p-6 shadow-glass">
         <h4 className="text-xs font-bold text-slate-300 mb-4 uppercase tracking-wider">Verification Method Utilization</h4>
-        
         <div className="space-y-4">
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-slate-400">

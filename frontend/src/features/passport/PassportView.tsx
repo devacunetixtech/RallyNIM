@@ -1,5 +1,6 @@
 import React from 'react';
 import { User, Award, Flame, Compass, Wallet, RefreshCw } from 'lucide-react';
+import { getExplorerUrl } from '../../lib/nimiq';
 
 interface PassportViewProps {
   user: any;
@@ -134,7 +135,7 @@ export const PassportView: React.FC<PassportViewProps> = ({
                   </div>
                   {claim.transactionHash && (
                     <a
-                      href={`https://testnet.nimiq.watch/#/transaction/${claim.transactionHash}`}
+                      href={getExplorerUrl(claim.transactionHash)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[9px] text-sky-400 hover:text-sky-300 underline font-mono block mt-1"
