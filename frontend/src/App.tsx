@@ -469,6 +469,46 @@ export default function App() {
     }
   };
 
+  // Publish Draft Campaign
+  const handlePublishDraft = async (campaignId: string, customTxHash?: string) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setLoading(true);
+    try {
+      let txHash = customTxHash?.trim();
+      if (!txHash) {
+        // Find campaign details
+        const targetCamp = campaigns.find(c => c._id === campaignId) || selectedCampaign;
+        if (!targetCamp) throw new Error('Campaign details not found');
+
+        const configRes = await api.campaigns.getEscrowAddress();
+        const escrowAddress = configRes.escrowAddress;
+        txHash = await nimiqSendTransaction(escrowAddress, targetCamp.rewardPool, campaignId);
+      }
+      
+      // Publish campaign to Live
+      await api.campaigns.publish(campaignId, txHash);
+      
+      setSuccessMessage('Campaign funded and published live successfully!');
+      
+      // Refresh campaign list
+      await fetchCampaigns();
+      
+      // Select the published campaign again to update the view
+      await handleSelectCampaign(campaignId);
+      
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.5 }
+      });
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to publish campaign');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 pb-20 pt-4 font-sans text-slate-200">
       
@@ -593,6 +633,7 @@ export default function App() {
                 activeQrStageId={activeQrStageId}
                 setActiveQrStageId={setActiveQrStageId}
                 qrCountdown={qrCountdown}
+                onPublishDraft={handlePublishDraft}
               />
             )}
 

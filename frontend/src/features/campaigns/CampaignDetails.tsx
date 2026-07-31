@@ -25,6 +25,9 @@ interface CampaignDetailsProps {
   activeQrStageId: string | null;
   setActiveQrStageId: (id: string | null) => void;
   qrCountdown: number;
+
+  // Draft publishing
+  onPublishDraft: (campaignId: string, customTxHash?: string) => void;
 }
 
 export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
@@ -47,6 +50,7 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
   activeQrStageId,
   setActiveQrStageId,
   qrCountdown,
+  onPublishDraft,
 }) => {
   return (
     <div>
@@ -58,6 +62,68 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
       </button>
 
       <div className="grid grid-cols-1 gap-6">
+        {campaign.status === 'draft' && user?.role === 'organizer' && (
+          <div className="glass-panel bg-gradient-to-br from-amber-500/10 to-amber-600/[0.02] border border-amber-500/20 shadow-glass rounded-2xl p-6 mb-2">
+            <h3 className="text-base font-extrabold text-amber-400 mb-2 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+              Campaign Draft Status (Unpublished)
+            </h3>
+            <p className="text-xs text-slate-300 leading-relaxed mb-4">
+              This campaign is in Draft mode and not visible to participants yet. To publish it live, it must be funded with <span className="font-extrabold text-nimiq-gold">{campaign.rewardPool} NIM</span> to the escrow pool.
+            </p>
+            
+            <div className="flex flex-col gap-4 border-t border-white/5 pt-4">
+              {/* Option A: If already sent */}
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Option A: Query/Paste existing transaction hash</span>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    id="draft-tx-hash-input"
+                    className="form-input text-xs py-2 px-3 flex-1 bg-slate-900/50 border-white/10"
+                    placeholder="Enter Nimiq transaction hash (0x...)"
+                  />
+                  <button 
+                    onClick={() => {
+                      const input = document.getElementById('draft-tx-hash-input') as HTMLInputElement;
+                      if (!input?.value.trim()) {
+                        alert('Please enter a transaction hash.');
+                        return;
+                      }
+                      onPublishDraft(campaign._id, input.value.trim());
+                    }}
+                    disabled={loading}
+                    className="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 hover:border-amber-500/50 text-amber-400 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-150 active:scale-95 disabled:opacity-50"
+                  >
+                    Verify &amp; Publish
+                  </button>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 my-1">
+                <div className="h-px bg-white/5 flex-1" />
+                <span className="text-[9px] text-slate-500 font-bold uppercase">Or</span>
+                <div className="h-px bg-white/5 flex-1" />
+              </div>
+
+              {/* Option B: Fund escrow and publish */}
+              <div className="flex justify-between items-center bg-white/[0.01] border border-white/5 p-3.5 rounded-xl">
+                <div>
+                  <span className="text-xs font-semibold text-slate-300 block">Option B: Fund Escrow now</span>
+                  <span className="text-[10px] text-slate-500">Initiates a payment of {campaign.rewardPool} NIM to escrow</span>
+                </div>
+                <button 
+                  onClick={() => onPublishDraft(campaign._id)}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-nimiq-gold to-[#163da1] hover:shadow-glow text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 disabled:opacity-50"
+                >
+                  Fund Escrow &amp; Publish
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Campaign Info Card */}
         <div className="glass-panel bg-gradient-to-br from-white/[0.02] to-white/[0.001] border border-white/5 shadow-glass rounded-2xl p-6">
@@ -132,9 +198,10 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
           ) : (
             <div className="space-y-4">
               {stages.map((stage, idx) => {
-                const isClaimed = claimHistory.some(ch => ch.stageId?._id === stage._id);
-                const hasClaimedPrev = idx === 0 || claimHistory.some(ch => ch.stageId?._id === stages[idx - 1]._id);
-                const isActive = stage.status === 'active' && hasClaimedPrev;
+                const isOrganizer = user?.role === 'organizer';
+                const isClaimed = !isOrganizer && claimHistory.some(ch => ch.stageId?._id === stage._id);
+                const hasClaimedPrev = isOrganizer || idx === 0 || claimHistory.some(ch => ch.stageId?._id === stages[idx - 1]._id);
+                const isActive = isOrganizer || (stage.status === 'active' && hasClaimedPrev);
                 
                 return (
                   <StageVerificationCard 

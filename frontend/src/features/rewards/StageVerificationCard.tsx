@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle, Lock, QrCode, ShieldAlert, Navigation, HelpCircle, Loader2 } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface StageVerificationCardProps {
   stage: any;
@@ -46,8 +46,9 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [cameraPermissionError, setCameraPermissionError] = useState<string | null>(null);
   
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerId = `qr-reader-${stage._id}`;
 
   // Geolocation trigger
@@ -89,32 +90,34 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
   // HTML5 QR Code Scanner trigger
   useEffect(() => {
     if (showScanner) {
+      setCameraPermissionError(null);
       // Delay initialization slightly to ensure container is fully mounted in DOM
       const timer = setTimeout(() => {
         try {
-          const scanner = new Html5QrcodeScanner(
-            scannerId,
-            { 
-              fps: 10, 
-              qrbox: { width: 250, height: 250 },
-              aspectRatio: 1.0 
-            },
-            /* verbose= */ false
-          );
-          
-          scannerRef.current = scanner;
+          const html5QrCode = new Html5Qrcode(scannerId);
+          html5QrCodeRef.current = html5QrCode;
 
-          scanner.render(
+          html5QrCode.start(
+            { facingMode: 'environment' },
+            {
+              fps: 10,
+              qrbox: { width: 220, height: 220 },
+            },
             (decodedText) => {
               setVerificationInput(decodedText);
               setSuccessMessage("QR Code scanned successfully!");
               setShowScanner(false);
-              scanner.clear().catch(err => console.error("Scanner clear error", err));
+              html5QrCode.stop().then(() => {
+                html5QrCodeRef.current = null;
+              }).catch(err => console.error("Scanner stop error", err));
             },
             (error) => {
               // Non-blocking scan errors
             }
-          );
+          ).catch(err => {
+            console.error("Failed to start camera scan:", err);
+            setCameraPermissionError("Could not access the rear camera. Please ensure camera permissions are granted.");
+          });
         } catch (e) {
           console.error("Failed to initialize QR Scanner:", e);
         }
@@ -122,9 +125,14 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
 
       return () => {
         clearTimeout(timer);
-        if (scannerRef.current) {
-          scannerRef.current.clear().catch(err => console.error("Scanner clear error", err));
-          scannerRef.current = null;
+        if (html5QrCodeRef.current) {
+          const instance = html5QrCodeRef.current;
+          html5QrCodeRef.current = null;
+          try {
+            instance.stop().catch(err => console.error("Scanner stop error during unmount", err));
+          } catch (e) {
+            // Already stopped or not started
+          }
         }
       };
     }
@@ -169,7 +177,12 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
 
       {/* Verification Action Block */}
       {isAuthenticated ? (
-        isClaimed ? (
+        user?.role === 'organizer' ? (
+          <div className="inline-flex items-center gap-2 text-nimiq-gold bg-nimiq-gold/10 px-3 py-1.5 rounded-lg text-xs font-bold mt-3 border border-nimiq-gold/20">
+            <CheckCircle size={14} />
+            Organizer View — {stage.claimed || 0} claims processed
+          </div>
+        ) : isClaimed ? (
           <div className="inline-flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs font-medium mt-3 border border-emerald-500/20">
             <CheckCircle size={14} />
             Claimed successfully
@@ -242,12 +255,17 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
 
                     {/* Camera Scanner View */}
                     {showScanner && (
-                      <div className="border border-white/10 rounded-xl overflow-hidden bg-black max-w-sm mx-auto p-4 relative">
-                        <div id={scannerId} className="w-full"></div>
-                        <div className="scanner-laser"></div>
-                        <p className="text-[10px] text-center text-slate-500 mt-2">
-                          Position the dynamic presenter QR code in front of your camera.
-                        </p>
+                      <div className="border border-white/10 rounded-xl overflow-hidden bg-black max-w-sm mx-auto p-4 relative space-y-2">
+                        <div id={scannerId} className="w-full min-h-[220px] bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-white/5"></div>
+                        {cameraPermissionError ? (
+                          <p className="text-[10px] text-center text-rose-400 font-bold">
+                            {cameraPermissionError}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-center text-slate-500">
+                            Rear camera active. Point at the presenter QR code.
+                          </p>
+                        )}
                       </div>
                     )}
                     
