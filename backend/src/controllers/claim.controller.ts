@@ -57,6 +57,18 @@ export class ClaimController {
   };
 
   /**
+   * Endpoint: GET /reward/public/stats
+   */
+  public publicStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const stats = await claimService.getPublicStats();
+      res.status(200).json(stats);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || 'Failed to fetch statistics' });
+    }
+  };
+
+  /**
    * Endpoint: POST /qr/generate (Organizer only)
    * Body: { stageId }
    */

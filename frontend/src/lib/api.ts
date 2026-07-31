@@ -103,6 +103,9 @@ export const api = {
         body: JSON.stringify({ campaignId, stageId, verificationData })
       }),
       
+    getPublicStats: () =>
+      request<{ totalParticipants: number; totalClaimed: number; recentClaims: any[] }>('/reward/public/stats'),
+      
     history: () =>
       request<{ history: any[] }>('/reward/history'),
       

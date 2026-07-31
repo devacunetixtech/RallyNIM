@@ -6,6 +6,9 @@ import { claimRateLimiter } from '../middleware/rateLimiter.middleware';
 
 const router = Router();
 
+// Public stats endpoint (no auth required)
+router.get('/public/stats', claimController.publicStats);
+
 // Participant and Organizer routes (Protected)
 router.post('/claim', authMiddleware, claimRateLimiter, claimController.claim);
 router.get('/history', authMiddleware, claimController.history);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Compass, User, PlusCircle, BarChart2, RefreshCw } from 'lucide-react';
+import { Compass, User, PlusCircle, BarChart2, RefreshCw, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
@@ -18,6 +18,7 @@ import { CampaignDetails } from './features/campaigns/CampaignDetails';
 import { CampaignCreator } from './features/campaigns/CampaignCreator';
 import { PassportView } from './features/passport/PassportView';
 import { AnalyticsView } from './features/analytics/AnalyticsView';
+import { HomeView } from './features/home/HomeView';
 
 export default function App() {
   // Global auth state
@@ -27,7 +28,7 @@ export default function App() {
   const [pendingAuth, setPendingAuth] = useState<{ address: string; nonce: string } | null>(null);
   
   // Navigation
-  const [activeTab, setActiveTab] = useState<'explore' | 'passport' | 'create' | 'analytics'>('explore');
+  const [activeTab, setActiveTab] = useState<'home' | 'explore' | 'passport' | 'create' | 'analytics'>('home');
   
   // App data
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -592,6 +593,18 @@ export default function App() {
         <div className="flex gap-2.5 border-b border-white/5 pb-3 overflow-x-auto">
           <button 
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+              activeTab === 'home' 
+                ? 'bg-gradient-to-r from-nimiq-gold to-[#163da1] text-white shadow-glow' 
+                : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10'
+            }`}
+            onClick={() => { setActiveTab('home'); setSelectedCampaign(null); }}
+          >
+            <Home size={15} />
+            Home
+          </button>
+          
+          <button 
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
               activeTab === 'explore' 
                 ? 'bg-gradient-to-r from-nimiq-gold to-[#163da1] text-white shadow-glow' 
                 : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10'
@@ -655,6 +668,13 @@ export default function App() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
+            {activeTab === 'home' && (
+              <HomeView 
+                onStartExploring={() => setActiveTab('explore')}
+                network={import.meta.env.VITE_NETWORK || 'mainnet'}
+              />
+            )}
+
             {activeTab === 'explore' && !selectedCampaign && (
               <CampaignExplorer 
                 campaigns={campaigns}

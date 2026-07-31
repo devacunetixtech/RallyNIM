@@ -271,6 +271,33 @@ export class ClaimService {
       .populate('stageId', 'title description order rewardType')
       .sort({ claimedAt: -1 });
   }
+
+  /**
+   * Retrieves summary statistics and recent claims list.
+   */
+  public async getPublicStats(): Promise<{
+    totalParticipants: number;
+    totalClaimed: number;
+    recentClaims: any[];
+  }> {
+    const uniqueParticipants = await Claim.distinct('walletAddress', { status: 'completed' });
+    const totalParticipants = uniqueParticipants.length;
+
+    const allClaims = await Claim.find({ status: 'completed' }).select('reward');
+    const totalClaimed = allClaims.reduce((acc, curr) => acc + curr.reward, 0);
+
+    const recentClaims = await Claim.find({ status: 'completed' })
+      .populate('campaignId', 'title')
+      .populate('stageId', 'title')
+      .sort({ claimedAt: -1 })
+      .limit(15);
+
+    return {
+      totalParticipants,
+      totalClaimed,
+      recentClaims
+    };
+  }
 }
 
 export const claimService = new ClaimService();
