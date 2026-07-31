@@ -255,9 +255,9 @@ export const CampaignCreator: React.FC<CampaignCreatorProps> = ({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label text-xs">Start Date</label>
+                  <label className="form-label text-xs">Start Date &amp; Time</label>
                   <input 
-                    type="date" 
+                    type="datetime-local" 
                     className="form-input py-2.5 px-4 text-sm" 
                     value={newCampaign.startDate}
                     onChange={(e) => setNewCampaign((prev: any) => ({ ...prev, startDate: e.target.value }))}
@@ -266,9 +266,9 @@ export const CampaignCreator: React.FC<CampaignCreatorProps> = ({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label text-xs">End Date</label>
+                  <label className="form-label text-xs">End Date &amp; Time</label>
                   <input 
-                    type="date" 
+                    type="datetime-local" 
                     className="form-input py-2.5 px-4 text-sm" 
                     value={newCampaign.endDate}
                     onChange={(e) => setNewCampaign((prev: any) => ({ ...prev, endDate: e.target.value }))}

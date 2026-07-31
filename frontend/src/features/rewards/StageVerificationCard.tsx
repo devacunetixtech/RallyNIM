@@ -51,6 +51,12 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerId = `qr-reader-${stage._id}`;
 
+  const now = new Date();
+  const startsAt = stage.startsAt ? new Date(stage.startsAt) : null;
+  const endsAt = stage.endsAt ? new Date(stage.endsAt) : null;
+  const isUpcoming = startsAt ? now < startsAt : false;
+  const isExpired = endsAt ? now > endsAt : false;
+
   // Geolocation trigger
   useEffect(() => {
     if (useGeofence && isActive && !isClaimed) {
@@ -149,6 +155,10 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
       className={`glass-panel border-l-4 transition-all duration-300 ${
         isClaimed 
           ? 'border-emerald-500 bg-emerald-500/[0.01]' 
+          : isUpcoming
+          ? 'border-amber-500/30 bg-white/[0.005] opacity-80'
+          : isExpired
+          ? 'border-rose-500/30 bg-white/[0.005] opacity-70'
           : isActive 
           ? 'border-nimiq-gold bg-white/[0.01]' 
           : 'border-white/5 opacity-60'
@@ -178,14 +188,34 @@ export const StageVerificationCard: React.FC<StageVerificationCardProps> = ({
       {/* Verification Action Block */}
       {isAuthenticated ? (
         user?.role === 'organizer' ? (
-          <div className="inline-flex items-center gap-2 text-nimiq-gold bg-nimiq-gold/10 px-3 py-1.5 rounded-lg text-xs font-bold mt-3 border border-nimiq-gold/20">
-            <CheckCircle size={14} />
-            Organizer View — {stage.claimed || 0} claims processed
+          <div className="flex flex-wrap gap-2 mt-3">
+            <div className="inline-flex items-center gap-2 text-nimiq-gold bg-nimiq-gold/10 px-3 py-1.5 rounded-lg text-xs font-bold border border-nimiq-gold/20">
+              <CheckCircle size={14} />
+              Organizer View — {stage.claimed || 0} claims processed
+            </div>
+            {isUpcoming && (
+              <span className="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-extrabold tracking-wider uppercase px-2 py-1 rounded-md">
+                Upcoming
+              </span>
+            )}
+            {isExpired && (
+              <span className="text-[10px] bg-rose-500/10 border border-rose-500/20 text-rose-400 font-extrabold tracking-wider uppercase px-2 py-1 rounded-md">
+                Ended
+              </span>
+            )}
           </div>
         ) : isClaimed ? (
           <div className="inline-flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs font-medium mt-3 border border-emerald-500/20">
             <CheckCircle size={14} />
             Claimed successfully
+          </div>
+        ) : isUpcoming ? (
+          <div className="inline-flex items-center gap-2 text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-lg text-xs font-semibold mt-3 border border-amber-500/20">
+            Starts: {startsAt?.toLocaleString()}
+          </div>
+        ) : isExpired ? (
+          <div className="inline-flex items-center gap-2 text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-lg text-xs font-semibold mt-3 border border-rose-500/20">
+            Expired: Closed at {endsAt?.toLocaleString()}
           </div>
         ) : isActive ? (
           <div className="border-t border-white/5 pt-4 mt-3">

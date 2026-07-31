@@ -29,9 +29,24 @@ export class ClaimService {
       if (!campaign) throw new Error('Campaign not found');
       if (campaign.status !== 'live') throw new Error('Campaign is not live');
 
+      const now = new Date();
+      if (campaign.startDate && now < new Date(campaign.startDate)) {
+        throw new Error('This campaign has not started yet.');
+      }
+      if (campaign.endDate && now > new Date(campaign.endDate)) {
+        throw new Error('This campaign has already ended.');
+      }
+
       const stage = await Stage.findById(stageId).session(session);
       if (!stage) throw new Error('Stage not found');
       if (stage.status !== 'active') throw new Error('Stage is not active');
+
+      if (stage.startsAt && now < new Date(stage.startsAt)) {
+        throw new Error('This stage challenge has not opened yet.');
+      }
+      if (stage.endsAt && now > new Date(stage.endsAt)) {
+        throw new Error('This stage challenge has already closed.');
+      }
 
       // Enforce sequential stage claiming: if stage order is > 1, must have claimed previous stage (order - 1)
       if (stage.order > 1) {
