@@ -272,12 +272,10 @@ export class ClaimService {
       .sort({ claimedAt: -1 });
   }
 
-  /**
-   * Retrieves summary statistics and recent claims list.
-   */
   public async getPublicStats(): Promise<{
     totalParticipants: number;
     totalClaimed: number;
+    totalOrganizers: number;
     recentClaims: any[];
   }> {
     const uniqueParticipants = await Claim.distinct('walletAddress', { status: 'completed' });
@@ -285,6 +283,9 @@ export class ClaimService {
 
     const allClaims = await Claim.find({ status: 'completed' }).select('reward');
     const totalClaimed = allClaims.reduce((acc, curr) => acc + curr.reward, 0);
+
+    const uniqueOrganizers = await Campaign.distinct('organizer');
+    const totalOrganizers = uniqueOrganizers.length;
 
     const recentClaims = await Claim.find({ status: 'completed' })
       .populate('campaignId', 'title')
@@ -295,6 +296,7 @@ export class ClaimService {
     return {
       totalParticipants,
       totalClaimed,
+      totalOrganizers,
       recentClaims
     };
   }

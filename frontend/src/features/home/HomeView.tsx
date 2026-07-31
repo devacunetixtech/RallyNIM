@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
-import { Play, Users, Award, ExternalLink, Zap, Compass, MapPin } from 'lucide-react';
+import { Play, Users, Award, ExternalLink, Zap, Compass, MapPin, UserCheck } from 'lucide-react';
 
 interface HomeViewProps {
   onStartExploring: () => void;
@@ -11,6 +11,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onStartExploring, network })
   const [stats, setStats] = useState<{
     totalParticipants: number;
     totalClaimed: number;
+    totalOrganizers: number;
     recentClaims: any[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -130,6 +131,19 @@ export const HomeView: React.FC<HomeViewProps> = ({ onStartExploring, network })
               </div>
               <div className="w-12 h-12 rounded-full bg-nimiq-gold/10 flex items-center justify-center text-nimiq-gold border border-nimiq-gold/25">
                 <Users size={22} />
+              </div>
+            </div>
+
+            {/* Total Active Organizers */}
+            <div className="glass-panel bg-white/[0.01] border border-white/5 p-6 rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Active Organizers</span>
+                <span className="text-3xl font-extrabold text-slate-200">
+                  {loading ? '...' : stats?.totalOrganizers || 0}
+                </span>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/25">
+                <UserCheck size={22} />
               </div>
             </div>
 
