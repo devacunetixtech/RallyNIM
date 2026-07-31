@@ -16,6 +16,22 @@ export const HomeView: React.FC<HomeViewProps> = ({ onStartExploring, network })
     recentClaims: any[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showProofModal, setShowProofModal] = useState(false);
+  const [verifiableData, setVerifiableData] = useState<any[] | null>(null);
+  const [loadingProof, setLoadingProof] = useState(false);
+
+  const handleOpenProofModal = async () => {
+    setShowProofModal(true);
+    setLoadingProof(true);
+    try {
+      const data = await api.rewards.getVerifiableParticipants();
+      setVerifiableData(data);
+    } catch (err) {
+      console.error('Failed to fetch verifiable participants:', err);
+    } finally {
+      setLoadingProof(false);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -123,16 +139,25 @@ export const HomeView: React.FC<HomeViewProps> = ({ onStartExploring, network })
           
           <div className="grid grid-cols-1 gap-4">
             {/* Total Unique Addresses */}
-            <div className="glass-panel bg-white/[0.01] border border-white/5 p-6 rounded-2xl flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Unique Addresses</span>
-                <span className="text-3xl font-extrabold text-slate-200">
-                  {loading ? '...' : stats?.totalUniqueAddresses || 0}
-                </span>
+            <div className="glass-panel bg-white/[0.01] border border-white/5 p-6 rounded-2xl flex flex-col justify-between gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Unique Addresses</span>
+                  <span className="text-3xl font-extrabold text-slate-200">
+                    {loading ? '...' : stats?.totalUniqueAddresses || 0}
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-nimiq-gold/10 flex items-center justify-center text-nimiq-gold border border-nimiq-gold/25">
+                  <Users size={22} />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-full bg-nimiq-gold/10 flex items-center justify-center text-nimiq-gold border border-nimiq-gold/25">
-                <Users size={22} />
-              </div>
+              <button
+                onClick={handleOpenProofModal}
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-nimiq-gold/10 hover:bg-nimiq-gold/20 border border-nimiq-gold/20 text-nimiq-gold text-xs font-bold transition-all duration-150 active:scale-[0.98]"
+              >
+                <UserCheck size={14} />
+                Verify Mainnet Proof
+              </button>
             </div>
 
             {/* Total NIM Claimed */}
@@ -214,8 +239,140 @@ export const HomeView: React.FC<HomeViewProps> = ({ onStartExploring, network })
             )}
           </div>
         </div>
-
       </div>
+
+      {/* Verifiable Proof Modal */}
+      {showProofModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div 
+            className="w-full max-w-4xl max-h-[85vh] flex flex-col bg-slate-900 border border-white/10 rounded-3xl shadow-glass border border-white/5 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/5 bg-slate-950/40">
+              <div>
+                <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <UserCheck className="text-nimiq-gold" size={20} />
+                  Verifiable Mainnet Activity Proof
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  List of distinct wallets that have completed challenges. Each action corresponds to a verified on-chain NIM transaction.
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowProofModal(false)}
+                className="text-slate-400 hover:text-slate-200 p-2 hover:bg-white/5 rounded-full transition-colors text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+              {loadingProof ? (
+                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                  <div className="w-10 h-10 border-4 border-nimiq-gold border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm text-slate-400 font-semibold">Loading verification proof data...</span>
+                </div>
+              ) : !verifiableData || verifiableData.length === 0 ? (
+                <div className="text-center py-20 text-slate-500 text-sm font-semibold">
+                  No mainnet verification records found.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="overflow-x-auto rounded-2xl border border-white/5 bg-slate-950/50">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-white/5 bg-white/[0.02] text-slate-400 font-bold">
+                          <th className="p-4">Participant Wallet Address</th>
+                          <th className="p-4 text-center">Total Quests Claimed</th>
+                          <th className="p-4 text-right">Total NIM Earned</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {verifiableData.map((participant) => (
+                          <React.Fragment key={participant.walletAddress}>
+                            <tr className="hover:bg-white/[0.01] transition-colors">
+                              <td className="p-4 font-mono font-bold text-slate-300">
+                                {participant.walletAddress}
+                              </td>
+                              <td className="p-4 text-center text-slate-400 font-semibold">
+                                {participant.totalClaimsCount}
+                              </td>
+                              <td className="p-4 text-right text-emerald-400 font-bold">
+                                {participant.totalRewardsClaimed} NIM
+                              </td>
+                            </tr>
+                            {/* Inner table for claim details */}
+                            <tr>
+                              <td colSpan={3} className="bg-slate-950/40 p-4 border-t-0">
+                                <div className="space-y-2 max-w-full">
+                                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
+                                    Claim Transactions ({participant.claims.length})
+                                  </span>
+                                  <div className="grid gap-2">
+                                    {participant.claims.map((claim: any, cIdx: number) => (
+                                      <div 
+                                        key={cIdx} 
+                                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white/[0.01] border border-white/5 p-2 rounded-lg gap-2 text-[11px]"
+                                      >
+                                        <div className="text-slate-300">
+                                          <span className="font-semibold text-slate-400">{claim.campaignTitle}</span>
+                                          <span className="text-slate-500 mx-1">/</span>
+                                          <span className="text-slate-300">{claim.stageTitle}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 justify-between sm:justify-end">
+                                          <span className="text-slate-500 font-medium">
+                                            {new Date(claim.claimedAt).toLocaleString()}
+                                          </span>
+                                          <span className="font-bold text-emerald-400">+{claim.rewardAmount} NIM</span>
+                                          {claim.transactionHash ? (
+                                            <a
+                                              href={explorerUrl(claim.transactionHash)}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex items-center gap-1 font-bold text-sky-400 hover:text-sky-300 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded transition-colors"
+                                            >
+                                              <ExternalLink size={10} />
+                                              Verify On Explorer
+                                            </a>
+                                          ) : (
+                                            <span className="text-slate-600 italic">No Hash</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          </React.Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-white/5 bg-slate-950/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="text-slate-500 text-[10px] sm:text-xs">
+                <span>Public JSON Endpoint: </span>
+                <code className="bg-slate-950 px-2 py-1 rounded text-slate-300 border border-white/5 font-mono">
+                  /api/v1/reward/public/verifiable-participants
+                </code>
+              </div>
+              <button
+                onClick={() => setShowProofModal(false)}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

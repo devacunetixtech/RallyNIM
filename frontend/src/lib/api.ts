@@ -106,6 +106,9 @@ export const api = {
     getPublicStats: () =>
       request<{ totalParticipants: number; totalClaimed: number; totalOrganizers: number; totalUniqueAddresses: number; recentClaims: any[] }>('/reward/public/stats'),
       
+    getVerifiableParticipants: () =>
+      request<any[]>('/reward/public/verifiable-participants'),
+      
     history: () =>
       request<{ history: any[] }>('/reward/history'),
       
