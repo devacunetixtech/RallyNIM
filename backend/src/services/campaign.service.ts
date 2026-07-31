@@ -53,6 +53,27 @@ export class CampaignService {
   }
 
   /**
+   * Automatically transitions 'scheduled' campaigns to 'live' if their startDate is in the past.
+   */
+  private async syncScheduledCampaigns(): Promise<void> {
+    const now = new Date();
+    const scheduledToLive = await Campaign.find({
+      status: 'scheduled',
+      startDate: { $lte: now }
+    });
+
+    for (const campaign of scheduledToLive) {
+      campaign.status = 'live';
+      await campaign.save();
+      
+      await Stage.updateMany(
+        { campaignId: campaign._id },
+        { status: 'active' }
+      );
+    }
+  }
+
+  /**
    * Retrieves all campaigns with basic filters.
    */
   public async getCampaigns(filters: {
@@ -62,6 +83,7 @@ export class CampaignService {
     requestingUserId?: string;
     requestingUserRole?: string;
   }): Promise<ICampaign[]> {
+    await this.syncScheduledCampaigns();
     const query: any = {};
     
     if (filters.category) query.category = filters.category;
@@ -101,6 +123,7 @@ export class CampaignService {
    * Retrieves a single campaign and its stages.
    */
   public async getCampaignById(id: string): Promise<{ campaign: ICampaign; stages: IStage[] }> {
+    await this.syncScheduledCampaigns();
     const campaign = await Campaign.findById(id);
     if (!campaign) {
       throw new Error('Campaign not found');
@@ -153,15 +176,24 @@ export class CampaignService {
     });
     await transaction.save();
 
-    // Set campaign to live
-    campaign.status = 'live';
+    // Set campaign to live or scheduled depending on startDate
+    const now = new Date();
+    if (campaign.startDate && new Date(campaign.startDate) > now) {
+      campaign.status = 'scheduled';
+      // Set stages to lock/upcoming
+      await Stage.updateMany(
+        { campaignId: campaign._id },
+        { status: 'upcoming' }
+      );
+    } else {
+      campaign.status = 'live';
+      // Activate all stages
+      await Stage.updateMany(
+        { campaignId: campaign._id },
+        { status: 'active' }
+      );
+    }
     await campaign.save();
-
-    // Activate all stages
-    await Stage.updateMany(
-      { campaignId: campaign._id },
-      { status: 'active' }
-    );
 
     return campaign;
   }
@@ -184,8 +216,62 @@ export class CampaignService {
     if (!campaign) throw new Error('Campaign not found');
     if (campaign.status !== 'paused') throw new Error('Only paused campaigns can be resumed');
 
-    campaign.status = 'live';
+    // Reset status to live (or scheduled if startDate is in the future)
+    const now = new Date();
+    if (campaign.startDate && new Date(campaign.startDate) > now) {
+      campaign.status = 'scheduled';
+    } else {
+      campaign.status = 'live';
+    }
     await campaign.save();
+    return campaign;
+  }
+
+  public async cancelCampaign(campaignId: string): Promise<ICampaign> {
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) throw new Error('Campaign not found');
+    if (['cancelled', 'completed', 'archived'].includes(campaign.status)) {
+      throw new Error(`Campaign cannot be cancelled in status: ${campaign.status}`);
+    }
+
+    const organizerUser = await User.findById(campaign.organizer);
+    if (!organizerUser || !organizerUser.walletAddress) {
+      throw new Error('Campaign organizer does not have a registered wallet');
+    }
+
+    const refundAmount = campaign.remainingPool;
+    let refundTxHash = '';
+
+    if (refundAmount > 0) {
+      // Execute the on-chain refund payout
+      try {
+        refundTxHash = await nimiqService.executeRewardPayout(
+          organizerUser.walletAddress,
+          refundAmount
+        );
+      } catch (err: any) {
+        throw new Error(`Failed to refund remaining pool on-chain: ${err.message}`);
+      }
+    }
+
+    campaign.status = 'cancelled';
+    campaign.remainingPool = 0; // Empty the pool as it has been refunded
+    await campaign.save();
+
+    // Create a transaction record for the refund
+    if (refundAmount > 0) {
+      const transaction = new Transaction({
+        walletAddress: organizerUser.walletAddress,
+        campaignId: campaign._id,
+        amount: refundAmount,
+        type: 'refund',
+        status: 'success',
+        network: process.env.NETWORK === 'mainnet' ? 'mainnet' : 'testnet',
+        transactionHash: refundTxHash,
+      });
+      await transaction.save();
+    }
+
     return campaign;
   }
 }

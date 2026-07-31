@@ -28,6 +28,11 @@ interface CampaignDetailsProps {
 
   // Draft publishing
   onPublishDraft: (campaignId: string, customTxHash?: string) => void;
+
+  // Organizer lifecycle handlers
+  onPauseCampaign?: (campaignId: string) => void;
+  onResumeCampaign?: (campaignId: string) => void;
+  onCancelCampaign?: (campaignId: string) => void;
 }
 
 export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
@@ -51,6 +56,9 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
   setActiveQrStageId,
   qrCountdown,
   onPublishDraft,
+  onPauseCampaign,
+  onResumeCampaign,
+  onCancelCampaign,
 }) => {
   return (
     <div>
@@ -132,9 +140,27 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
               {campaign.category}
             </span>
             <div className="flex gap-2">
-              <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                Campaign Active
-              </span>
+              {campaign.status === 'cancelled' ? (
+                <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-rose-500/25 border border-rose-500/50 text-rose-400">
+                  Cancelled
+                </span>
+              ) : campaign.status === 'paused' ? (
+                <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-500/25 border border-amber-500/50 text-amber-400 animate-pulse">
+                  Paused
+                </span>
+              ) : campaign.status === 'scheduled' ? (
+                <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-blue-500/20 border border-blue-500/40 text-blue-400">
+                  Scheduled
+                </span>
+              ) : new Date(campaign.endDate) < new Date() ? (
+                <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                  Ended
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                  Campaign Active
+                </span>
+              )}
               <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-400">
                 Verified Escrow
               </span>
@@ -171,6 +197,45 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Organizer Controls */}
+          {user?.role === 'organizer' && campaign.status !== 'draft' && campaign.status !== 'cancelled' && new Date(campaign.endDate) >= new Date() && (
+            <div className="border-t border-white/5 pt-5 mt-5 flex flex-wrap gap-3">
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block w-full mb-1">
+                Organizer Actions:
+              </span>
+              
+              {campaign.status === 'paused' ? (
+                <button
+                  onClick={() => onResumeCampaign?.(campaign._id)}
+                  disabled={loading}
+                  className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 disabled:opacity-50"
+                >
+                  ▶ Resume Campaign
+                </button>
+              ) : (
+                <button
+                  onClick={() => onPauseCampaign?.(campaign._id)}
+                  disabled={loading}
+                  className="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-400 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 disabled:opacity-50"
+                >
+                  ⏸ Pause Campaign
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  if (confirm("Are you sure you want to cancel this campaign? This will permanently disable claims and stop the event.")) {
+                    onCancelCampaign?.(campaign._id);
+                  }
+                }}
+                disabled={loading}
+                className="bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 disabled:opacity-50"
+              >
+                🛑 Cancel Campaign
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Dynamic QR Display Terminal Display */}

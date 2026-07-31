@@ -150,6 +150,19 @@ export class CampaignController {
   };
 
   /**
+   * Endpoint: POST /campaign/:id/cancel
+   */
+  public cancel = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const campaign = await campaignService.cancelCampaign(id);
+      res.status(200).json({ campaign });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || 'Failed to cancel campaign' });
+    }
+  };
+
+  /**
    * Endpoint: GET /campaigns/escrow/address
    */
   public getEscrowAddress = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

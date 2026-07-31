@@ -77,6 +77,21 @@ export const api = {
         body: JSON.stringify({ txHash })
       }),
       
+    pause: (id: string) =>
+      request<{ campaign: any }>(`/campaigns/${id}/pause`, {
+        method: 'POST'
+      }),
+      
+    resume: (id: string) =>
+      request<{ campaign: any }>(`/campaigns/${id}/resume`, {
+        method: 'POST'
+      }),
+      
+    cancel: (id: string) =>
+      request<{ campaign: any }>(`/campaigns/${id}/cancel`, {
+        method: 'POST'
+      }),
+      
     getEscrowAddress: () =>
       request<{ escrowAddress: string }>('/campaigns/escrow/address')
   },

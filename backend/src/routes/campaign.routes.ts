@@ -34,5 +34,11 @@ router.post(
   requireRole(['organizer']), 
   campaignController.resume
 );
+router.post(
+  '/:id/cancel', 
+  authMiddleware, 
+  requireRole(['organizer']), 
+  campaignController.cancel
+);
 
 export default router;

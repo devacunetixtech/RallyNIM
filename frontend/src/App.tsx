@@ -509,6 +509,57 @@ export default function App() {
     }
   };
 
+  // Pause Campaign
+  const handlePauseCampaign = async (campaignId: string) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setLoading(true);
+    try {
+      const res = await api.campaigns.pause(campaignId);
+      setSuccessMessage('Campaign paused successfully.');
+      setSelectedCampaign(res.campaign);
+      await fetchCampaigns();
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to pause campaign');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resume Campaign
+  const handleResumeCampaign = async (campaignId: string) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setLoading(true);
+    try {
+      const res = await api.campaigns.resume(campaignId);
+      setSuccessMessage('Campaign resumed successfully.');
+      setSelectedCampaign(res.campaign);
+      await fetchCampaigns();
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to resume campaign');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cancel Campaign
+  const handleCancelCampaign = async (campaignId: string) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setLoading(true);
+    try {
+      const res = await api.campaigns.cancel(campaignId);
+      setSuccessMessage('Campaign cancelled successfully.');
+      setSelectedCampaign(res.campaign);
+      await fetchCampaigns();
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to cancel campaign');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 pb-20 pt-4 font-sans text-slate-200">
       
@@ -634,6 +685,9 @@ export default function App() {
                 setActiveQrStageId={setActiveQrStageId}
                 qrCountdown={qrCountdown}
                 onPublishDraft={handlePublishDraft}
+                onPauseCampaign={handlePauseCampaign}
+                onResumeCampaign={handleResumeCampaign}
+                onCancelCampaign={handleCancelCampaign}
               />
             )}
 

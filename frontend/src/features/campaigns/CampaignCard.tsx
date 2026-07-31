@@ -14,7 +14,9 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
     ? (campaign.remainingPool / campaign.rewardPool) * 100 
     : 0;
 
-  const isLive = campaign.status === 'live';
+  const isCampaignEnded = new Date(campaign.endDate) < new Date();
+  const isLive = campaign.status === 'live' && !isCampaignEnded;
+  const displayStatus = isCampaignEnded ? 'ended' : campaign.status;
 
   return (
     <div 
@@ -29,14 +31,22 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({
           <span className={`flex items-center gap-1.5 text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full ${
             isLive 
               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+              : displayStatus === 'ended'
+              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
               : campaign.status === 'draft'
               ? 'bg-slate-500/15 text-slate-400 border border-slate-500/20'
               : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
           }`}>
             <span className={`w-1.5 h-1.5 rounded-full ${
-              isLive ? 'bg-emerald-400 animate-pulse shadow-[0_0_6px_1px_rgba(52,211,153,0.6)]' : campaign.status === 'draft' ? 'bg-slate-400' : 'bg-amber-400'
+              isLive 
+                ? 'bg-emerald-400 animate-pulse shadow-[0_0_6px_1px_rgba(52,211,153,0.6)]' 
+                : displayStatus === 'ended'
+                ? 'bg-rose-400'
+                : campaign.status === 'draft' 
+                ? 'bg-slate-400' 
+                : 'bg-amber-400'
             }`} />
-            {campaign.status}
+            {displayStatus}
           </span>
         </div>
         
