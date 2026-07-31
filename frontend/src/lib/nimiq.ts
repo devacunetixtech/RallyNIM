@@ -280,7 +280,7 @@ export async function sendTransaction(
 export async function getBalance(): Promise<number> {
   if (!activeAddress) return 0;
 
-  const normalized = activeAddress.replace(/\s+/g, '').toUpperCase();
+  const formattedAddress = toUserFriendlyAddress(activeAddress);
 
   // If inside Nimiq Pay, try querying their injected provider first to bypass any webview/CORS restrictions
   if (isInsideNimiqPay()) {
@@ -298,10 +298,18 @@ export async function getBalance(): Promise<number> {
 
         const data = await minipayProvider.request<any>({
           method: 'getAccountByAddress',
-          params: [normalized],
+          params: [formattedAddress],
         });
-        if (data && data.balance != null) {
-          return data.balance / 100_000;
+        if (data) {
+          if (data.balance != null) {
+            return data.balance / 100_000;
+          }
+          if (data.result?.balance != null) {
+            return data.result.balance / 100_000;
+          }
+          if (data.result?.data?.balance != null) {
+            return data.result.data.balance / 100_000;
+          }
         }
       }
     } catch (err) {
@@ -319,14 +327,20 @@ export async function getBalance(): Promise<number> {
       body: JSON.stringify({
         jsonrpc: '2.0',
         method: 'getAccountByAddress',
-        params: [normalized],
+        params: [formattedAddress],
         id: 1,
       }),
     });
 
     const data = await res.json();
-    if (data?.result?.data?.balance != null) {
-      return data.result.data.balance / 100_000;
+    const result = data?.result;
+    if (result) {
+      if (result.data?.balance != null) {
+        return result.data.balance / 100_000;
+      }
+      if (result.balance != null) {
+        return result.balance / 100_000;
+      }
     }
   } catch (err) {
     console.error('Failed to fetch Nimiq balance:', err);
