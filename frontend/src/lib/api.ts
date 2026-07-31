@@ -104,7 +104,7 @@ export const api = {
       }),
       
     getPublicStats: () =>
-      request<{ totalParticipants: number; totalClaimed: number; totalOrganizers: number; recentClaims: any[] }>('/reward/public/stats'),
+      request<{ totalParticipants: number; totalClaimed: number; totalOrganizers: number; totalUniqueAddresses: number; recentClaims: any[] }>('/reward/public/stats'),
       
     history: () =>
       request<{ history: any[] }>('/reward/history'),

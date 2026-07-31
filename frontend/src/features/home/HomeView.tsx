@@ -12,6 +12,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onStartExploring, network })
     totalParticipants: number;
     totalClaimed: number;
     totalOrganizers: number;
+    totalUniqueAddresses: number;
     recentClaims: any[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,29 +122,16 @@ export const HomeView: React.FC<HomeViewProps> = ({ onStartExploring, network })
           </h2>
           
           <div className="grid grid-cols-1 gap-4">
-            {/* Total Engaged Participants */}
+            {/* Total Unique Addresses */}
             <div className="glass-panel bg-white/[0.01] border border-white/5 p-6 rounded-2xl flex items-center justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Engaged Wallets</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Unique Addresses</span>
                 <span className="text-3xl font-extrabold text-slate-200">
-                  {loading ? '...' : stats?.totalParticipants || 0}
+                  {loading ? '...' : stats?.totalUniqueAddresses || 0}
                 </span>
               </div>
               <div className="w-12 h-12 rounded-full bg-nimiq-gold/10 flex items-center justify-center text-nimiq-gold border border-nimiq-gold/25">
                 <Users size={22} />
-              </div>
-            </div>
-
-            {/* Total Active Organizers */}
-            <div className="glass-panel bg-white/[0.01] border border-white/5 p-6 rounded-2xl flex items-center justify-between">
-              <div>
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Active Organizers</span>
-                <span className="text-3xl font-extrabold text-slate-200">
-                  {loading ? '...' : stats?.totalOrganizers || 0}
-                </span>
-              </div>
-              <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/25">
-                <UserCheck size={22} />
               </div>
             </div>
 

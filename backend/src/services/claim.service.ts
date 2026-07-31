@@ -276,6 +276,7 @@ export class ClaimService {
     totalParticipants: number;
     totalClaimed: number;
     totalOrganizers: number;
+    totalUniqueAddresses: number;
     recentClaims: any[];
   }> {
     const uniqueParticipants = await Claim.distinct('walletAddress', { status: 'completed' });
@@ -284,8 +285,19 @@ export class ClaimService {
     const allClaims = await Claim.find({ status: 'completed' }).select('reward');
     const totalClaimed = allClaims.reduce((acc, curr) => acc + curr.reward, 0);
 
-    const uniqueOrganizers = await Campaign.distinct('organizer');
-    const totalOrganizers = uniqueOrganizers.length;
+    const uniqueOrganizerIds = await Campaign.distinct('organizer');
+    const totalOrganizers = uniqueOrganizerIds.length;
+
+    const organizerUsers = await User.find({ _id: { $in: uniqueOrganizerIds } }).select('walletAddress');
+    const organizerAddresses = organizerUsers
+      .map(u => u.walletAddress?.toLowerCase().trim())
+      .filter(Boolean);
+
+    const allUniqueAddresses = new Set([
+      ...uniqueParticipants.map(a => a.toLowerCase().trim()),
+      ...organizerAddresses
+    ]);
+    const totalUniqueAddresses = allUniqueAddresses.size;
 
     const recentClaims = await Claim.find({ status: 'completed' })
       .populate('campaignId', 'title')
@@ -297,6 +309,7 @@ export class ClaimService {
       totalParticipants,
       totalClaimed,
       totalOrganizers,
+      totalUniqueAddresses,
       recentClaims
     };
   }
