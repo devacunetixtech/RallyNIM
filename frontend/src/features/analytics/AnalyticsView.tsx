@@ -120,7 +120,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     Campaign: {claim.campaignId?.title || 'Unknown'}
                   </div>
                   <div className="text-[10px] text-slate-400 font-mono mt-1">
-                    To: {claim.walletAddress.toUpperCase().replace(/(.{4})/g, '$1 ')}
+                    To: {(claim.walletAddress || '').toUpperCase().replace(/(.{4})/g, '$1 ')}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1.5">

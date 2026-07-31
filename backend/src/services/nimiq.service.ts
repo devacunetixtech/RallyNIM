@@ -18,7 +18,8 @@ export class NimiqService {
   /**
    * Helper to normalize Nimiq address representation (removes spaces, uppercase)
    */
-  private normalizeAddress(address: string): string {
+  private normalizeAddress(address: string | undefined | null): string {
+    if (!address) return '';
     return address.replace(/\s+/g, '').toUpperCase();
   }
 
@@ -46,39 +47,48 @@ export class NimiqService {
         { timeout: 5000 }
       );
 
-      const tx = response.data?.result;
+      let tx = response.data?.result;
       if (!tx) {
         throw new Error(`Transaction ${txHash} not found on-chain.`);
       }
 
+      // Handle NimiqWatch wrapped format
+      if (tx && tx.data) {
+        tx = tx.data;
+      }
+
       // Validate sender
       const cleanSender = this.normalizeAddress(expectedSender);
-      const txSender = this.normalizeAddress(tx.fromAddress || tx.from);
+      const rawSender = tx.fromAddress || tx.from;
+      const txSender = this.normalizeAddress(rawSender);
       if (cleanSender !== txSender) {
-        throw new Error(`Transaction sender mismatch. Expected ${expectedSender}, got ${tx.from}`);
+        throw new Error(`Transaction sender mismatch. Expected ${expectedSender}, got ${rawSender || 'undefined'}`);
       }
 
       // Validate recipient (Escrow address)
       const cleanEscrow = this.normalizeAddress(this.escrowAddress);
-      const txRecipient = this.normalizeAddress(tx.toAddress || tx.to);
+      const rawRecipient = tx.toAddress || tx.to;
+      const txRecipient = this.normalizeAddress(rawRecipient);
       if (cleanEscrow !== txRecipient) {
-        throw new Error(`Transaction recipient mismatch. Expected Escrow ${this.escrowAddress}, got ${tx.to}`);
+        throw new Error(`Transaction recipient mismatch. Expected Escrow ${this.escrowAddress}, got ${rawRecipient || 'undefined'}`);
       }
 
       // Validate amount (1 NIM = 100,000 Luna)
       const expectedLuna = expectedAmountInNIM * 100000;
       const txLuna = parseInt(tx.value, 10);
-      if (txLuna !== expectedLuna) {
-        throw new Error(`Transaction amount mismatch. Expected ${expectedLuna} Luna, got ${txLuna} Luna`);
+      if (isNaN(txLuna) || txLuna !== expectedLuna) {
+        throw new Error(`Transaction amount mismatch. Expected ${expectedLuna} Luna, got ${tx.value} Luna`);
       }
 
       // Validate campaign ID in extra data
       // Extra data is typically stored as a hex string in the input/data field
       if (tx.data || tx.input) {
         const hexData = tx.data || tx.input;
-        const decodedCampaignId = Buffer.from(hexData.replace(/^0x/, ''), 'hex').toString('utf8');
-        if (decodedCampaignId !== campaignId) {
-          logger.warn(`Transaction extra data (${decodedCampaignId}) does not match Campaign ID (${campaignId})`);
+        if (typeof hexData === 'string') {
+          const decodedCampaignId = Buffer.from(hexData.replace(/^0x/, ''), 'hex').toString('utf8');
+          if (decodedCampaignId !== campaignId) {
+            logger.warn(`Transaction extra data (${decodedCampaignId}) does not match Campaign ID (${campaignId})`);
+          }
         }
       }
 
