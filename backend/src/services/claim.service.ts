@@ -3,6 +3,7 @@ import { Stage } from '../models/Stage';
 import { Claim, IClaim } from '../models/Claim';
 import { Passport } from '../models/Passport';
 import { Transaction } from '../models/Transaction';
+import { User } from '../models/User';
 import { qrService } from './qr.service';
 import { nimiqService } from './nimiq.service';
 import mongoose from 'mongoose';
