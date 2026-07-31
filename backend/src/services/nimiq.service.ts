@@ -34,12 +34,6 @@ export class NimiqService {
     try {
       logger.info(`Verifying funding transaction ${txHash} on Nimiq Testnet`);
 
-      // Allow fallback if txHash is a mock developer hash
-      if (txHash.startsWith('nq_tx_mock_')) {
-        logger.info(`Detected mock transaction hash: ${txHash}. Bypassing live verification.`);
-        return true;
-      }
-
       // JSON-RPC call to Nimiq Node
       const response = await axios.post(
         this.rpcUrl,
@@ -54,8 +48,7 @@ export class NimiqService {
 
       const tx = response.data?.result;
       if (!tx) {
-        logger.warn(`Transaction ${txHash} not found on-chain. Falling back to mock approval for demo.`);
-        return true; // Fallback to make the demo run smoothly if public RPC is down
+        throw new Error(`Transaction ${txHash} not found on-chain.`);
       }
 
       // Validate sender
@@ -93,9 +86,7 @@ export class NimiqService {
       return true;
     } catch (error: any) {
       logger.error(`Failed to verify transaction on-chain: ${error.message}`);
-      // Fallback for seamless demo/testing flow
-      logger.info('Auto-approving transaction in developer fallback mode.');
-      return true;
+      throw error;
     }
   }
 
@@ -114,10 +105,7 @@ export class NimiqService {
 
       // Check if hot wallet private key is configured
       if (!config.hotWalletPrivateKey || config.hotWalletPrivateKey.length !== 64) {
-        logger.info('No valid HOT_WALLET_PRIVATE_KEY configured. Simulating reward payout.');
-        const mockTxHash = `nq_tx_${crypto.randomUUID().replace(/-/g, '')}`;
-        logger.info(`Payout simulation generated. Hash: ${mockTxHash}`);
-        return mockTxHash;
+        throw new Error('HOT_WALLET_PRIVATE_KEY is not configured or invalid. Cannot execute payout.');
       }
 
       // Live transaction creation, signing, and broadcasting

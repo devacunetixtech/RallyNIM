@@ -28,11 +28,6 @@ export const verifyNimiqSignature = (
   signatureHex: string,
   publicKeyHex: string
 ): boolean => {
-  // Developer test fallback
-  if (signatureHex === 'mock_signature_for_testing') {
-    return true;
-  }
-
   if (!signatureHex?.trim() || !publicKeyHex?.trim()) {
     return false;
   }
@@ -61,8 +56,7 @@ export const verifyPublicKeyMatchesAddress = (
   publicKeyHex: string,
   walletAddress: string
 ): boolean => {
-  if (!publicKeyHex || publicKeyHex === 'mock_public_key') return true;
-  if (!walletAddress) return false;
+  if (!publicKeyHex || !walletAddress) return false;
 
   if (publicKeyHex.length !== 64) {
     console.warn(`verifyPublicKeyMatchesAddress: bad publicKey length ${publicKeyHex.length}`);

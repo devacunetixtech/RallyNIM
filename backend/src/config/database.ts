@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import { config } from './environment';
 import { logger } from '../utils/logger';
 
-export let mongoServer: any = null;
 let cachedConnectionPromise: Promise<typeof mongoose> | null = null;
 
 export const connectDatabase = async (): Promise<void> => {
@@ -30,25 +29,6 @@ export const connectDatabase = async (): Promise<void> => {
       logger.warn('MongoDB disconnected');
       cachedConnectionPromise = null;
     });
-
-    if (config.nodeEnv === 'development' && config.mongoUri.includes('localhost')) {
-      try {
-        const { MongoMemoryServer } = require('mongodb-memory-server');
-        mongoServer = await MongoMemoryServer.create();
-        const uri = mongoServer.getUri();
-        logger.info(`Starting in-memory MongoDB server: ${uri}`);
-        cachedConnectionPromise = mongoose.connect(uri);
-        await cachedConnectionPromise;
-        
-        import('./seed')
-          .then(m => m.seedDatabase())
-          .catch(err => logger.error(`In-memory database seeding failed: ${err}`));
-          
-        return;
-      } catch (err) {
-        logger.error(`Failed to start in-memory MongoDB server: ${err}. Falling back to standard URI.`);
-      }
-    }
 
     logger.info('Establishing new MongoDB connection...');
     cachedConnectionPromise = mongoose.connect(config.mongoUri, { 
