@@ -69,6 +69,18 @@ export class ClaimController {
   };
 
   /**
+   * Endpoint: GET /reward/public/verifiable-participants
+   */
+  public publicVerifiableParticipants = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const data = await claimService.getVerifiableParticipants();
+      res.status(200).json(data);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || 'Failed to fetch verifiable participants' });
+    }
+  };
+
+  /**
    * Endpoint: POST /qr/generate (Organizer only)
    * Body: { stageId }
    */

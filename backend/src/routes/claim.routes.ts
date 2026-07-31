@@ -8,6 +8,7 @@ const router = Router();
 
 // Public stats endpoint (no auth required)
 router.get('/public/stats', claimController.publicStats);
+router.get('/public/verifiable-participants', claimController.publicVerifiableParticipants);
 
 // Participant and Organizer routes (Protected)
 router.post('/claim', authMiddleware, claimRateLimiter, claimController.claim);

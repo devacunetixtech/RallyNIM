@@ -305,6 +305,54 @@ export class ClaimService {
       recentClaims
     };
   }
+
+  public async getVerifiableParticipants(): Promise<Array<{
+    walletAddress: string;
+    totalClaimsCount: number;
+    totalRewardsClaimed: number;
+    claims: Array<{
+      campaignTitle: string;
+      stageTitle: string;
+      rewardAmount: number;
+      transactionHash?: string;
+      claimedAt: Date;
+    }>
+  }>> {
+    const completedClaims = await Claim.find({ status: 'completed' })
+      .populate('campaignId', 'title')
+      .populate('stageId', 'title')
+      .sort({ claimedAt: -1 });
+
+    const groupedMap = new Map<string, any>();
+
+    for (const claim of completedClaims) {
+      const wallet = claim.walletAddress.toLowerCase().trim();
+      const campaignTitle = (claim.campaignId as any)?.title || 'Unknown Campaign';
+      const stageTitle = (claim.stageId as any)?.title || 'Unknown Stage';
+
+      if (!groupedMap.has(wallet)) {
+        groupedMap.set(wallet, {
+          walletAddress: wallet,
+          totalClaimsCount: 0,
+          totalRewardsClaimed: 0,
+          claims: [],
+        });
+      }
+
+      const walletGroup = groupedMap.get(wallet);
+      walletGroup.totalClaimsCount += 1;
+      walletGroup.totalRewardsClaimed += claim.reward;
+      walletGroup.claims.push({
+        campaignTitle,
+        stageTitle,
+        rewardAmount: claim.reward,
+        transactionHash: claim.transactionHash,
+        claimedAt: claim.claimedAt,
+      });
+    }
+
+    return Array.from(groupedMap.values());
+  }
 }
 
 export const claimService = new ClaimService();
