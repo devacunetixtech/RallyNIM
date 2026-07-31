@@ -289,16 +289,7 @@ export class ClaimService {
     const uniqueOrganizerIds = await Campaign.distinct('organizer');
     const totalOrganizers = uniqueOrganizerIds.length;
 
-    const organizerUsers = await User.find({ _id: { $in: uniqueOrganizerIds } }).select('walletAddress');
-    const organizerAddresses = organizerUsers
-      .map(u => u.walletAddress?.toLowerCase().trim())
-      .filter(Boolean);
-
-    const allUniqueAddresses = new Set([
-      ...uniqueParticipants.map(a => a.toLowerCase().trim()),
-      ...organizerAddresses
-    ]);
-    const totalUniqueAddresses = allUniqueAddresses.size;
+    const totalUniqueAddresses = await User.countDocuments({});
 
     const recentClaims = await Claim.find({ status: 'completed' })
       .populate('campaignId', 'title')
