@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Brand Logo and Title */}
       <div className="flex items-center justify-between w-full md:w-auto gap-4">
         <div className="flex items-center gap-4">
-          <div className="h-16 md:h-20 lg:h-24 flex items-center">
+          <div className="h-20 md:h-28 lg:h-24 flex items-center">
             <img
               src="/Assets/RallyPrimaryLogo.png"
               alt="RallyNIM"
