@@ -2,6 +2,20 @@ import React from 'react';
 import { MapPin, Calendar, Award, Layers, RefreshCw } from 'lucide-react';
 import { StageVerificationCard } from '../rewards/StageVerificationCard';
 import { QrTerminal } from '../rewards/QrTerminal';
+import { CampaignTimer } from './CampaignTimer';
+
+function formatDateTime(dateStr: string | Date): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 
 interface CampaignDetailsProps {
   campaign: any;
@@ -170,7 +184,7 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
           <h2 className="text-xl md:text-2xl font-bold text-slate-100 mb-3">{campaign.title}</h2>
           <p className="text-sm text-slate-400 mb-6 leading-relaxed">{campaign.description}</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-white/5 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-white/5 pt-4">
             <div className="flex items-center gap-3">
               <MapPin size={18} className="text-nimiq-gold shrink-0" />
               <div>
@@ -181,9 +195,11 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
             <div className="flex items-center gap-3">
               <Calendar size={18} className="text-sky-400 shrink-0" />
               <div>
-                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Event Dates</div>
-                <div className="text-sm font-semibold text-slate-200">
-                  {new Date(campaign.startDate).toLocaleDateString()}
+                <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Event Schedule</div>
+                <div className="text-xs font-semibold text-slate-200 leading-tight">
+                  <span className="text-slate-400">Starts:</span> {formatDateTime(campaign.startDate)}
+                  <br />
+                  <span className="text-slate-400">Ends:</span> {formatDateTime(campaign.endDate)}
                 </div>
               </div>
             </div>
@@ -195,6 +211,9 @@ export const CampaignDetails: React.FC<CampaignDetailsProps> = ({
                   {campaign.remainingPool} NIM / {campaign.rewardPool} NIM
                 </div>
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <CampaignTimer startDate={campaign.startDate} endDate={campaign.endDate} />
             </div>
           </div>
 
