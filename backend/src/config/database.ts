@@ -39,10 +39,7 @@ export const connectDatabase = async (): Promise<void> => {
     
     await cachedConnectionPromise;
     
-    // Asynchronously run seeding so it doesn't block server start or request handling
-    import('./seed')
-      .then(m => m.seedDatabase())
-      .catch(err => logger.error(`Database seeding execution failed: ${err}`));
+
   } catch (error) {
     logger.error(`Failed to connect to MongoDB: ${error}`);
     cachedConnectionPromise = null;
