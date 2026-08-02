@@ -49,11 +49,13 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Brand Logo and Title */}
       <div className="flex items-center justify-between w-full md:w-auto gap-4">
         <div className="flex items-center gap-4">
-          <img 
-            src="/Assets/RallyPrimaryLogo.png" 
-            alt="RallyNIM" 
-            className="h-20 md:h-28 lg:h-32 w-auto object-contain" 
-          />
+          <div className="h-16 md:h-20 lg:h-24 flex items-center">
+            <img
+              src="/Assets/RallyPrimaryLogo.png"
+              alt="RallyNIM"
+              className="h-full w-auto object-contain"
+            />
+          </div>
           <div className="hidden lg:flex flex-col border-l border-white/10 dark:border-slate-800/50 pl-4">
             <p className="text-[13px] text-slate-400 font-medium tracking-wide">Event Engagement &amp; Escrow Rewards</p>
           </div>
